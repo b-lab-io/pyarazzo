@@ -1,0 +1,20 @@
+# Changes here will be overwritten by Copier
+_commit: 1.5.4
+_src_path: https://github.com/pawamoy/copier-uv.git
+author_email: sebastien@b-lab.io
+author_fullname: Sebastien Andreo
+author_username: sebastien-b-lab-io
+copyright_date: '2024'
+copyright_holder: b-lab.io
+copyright_holder_email: sebastien@b-lab.io
+copyright_license: Apache License 2.0
+insiders: false
+project_description: CLI to manipulate and build on top of the Arazzo Specification
+project_name: pyarazzo
+python_package_command_line_name: pyarazzo
+python_package_distribution_name: pyarazzo
+python_package_import_name: pyarazzo
+repository_name: pyarazzo
+repository_namespace: b-lab-io
+repository_provider: github.com
+

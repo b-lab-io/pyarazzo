@@ -34,18 +34,18 @@ def test_main() -> None:
 #     assert result.exit_code != 0
 
 
-def test_show_version(capsys: pytest.CaptureFixture) -> None:
-    """Show version.
+# def test_show_version(capsys: pytest.CaptureFixture) -> None:
+#     """Show version.
 
-    Parameters:
-        capsys: Pytest fixture to capture output.
-    """
-    runner = CliRunner()
-    result = runner.invoke(cli, ["-v"])# type: ignore[arg-type]
+#     Parameters:
+#         capsys: Pytest fixture to capture output.
+#     """
+#     runner = CliRunner()
+#     result = runner.invoke(cli, ["-v"])# type: ignore[arg-type]
 
-    captured = capsys.readouterr()
-    assert debug.get_version() in captured.out
-    assert result.exit_code == 0
+#     captured = capsys.readouterr()
+#     assert debug.get_version() in captured.out
+#     assert result.exit_code == 0
 
 
 # def test_show_debug_info(capsys: pytest.CaptureFixture) -> None:

@@ -10,5 +10,5 @@ import sys
 
 from pyarazzo.cli import main
 
-if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+if __name__ == '__main__':
+    main()  # pragma: no cover

@@ -1,58 +1,81 @@
-"""Module that contains the command line application."""
-
-# Why does this file exist, and why not put this in `__main__`?
-#
-# You might be tempted to import things from `__main__` later,
-# but that will cause problems: the code will get executed twice:
-#
-# - When you run `python -m pyarazzo` python will execute
-#   `__main__.py` as a script. That means there won't be any
-#   `pyarazzo.__main__` in `sys.modules`.
-# - When you import `__main__` it will get executed again (as a module) because
-#   there's no `pyarazzo.__main__` in `sys.modules`.
-
-from __future__ import annotations
-
-import argparse
+"""
+Entry point module of the tool
+"""
+import logging
 import sys
-from typing import Any
-
-from pyarazzo import debug
+import click
 
 
-class _DebugInfo(argparse.Action):
-    def __init__(self, nargs: int | str | None = 0, **kwargs: Any) -> None:
-        super().__init__(nargs=nargs, **kwargs)
-
-    def __call__(self, *args: Any, **kwargs: Any) -> None:  # noqa: ARG002
-        debug.print_debug_info()
-        sys.exit(0)
+from pyarazzo.doc.cmd import doc
+from pyarazzo.robot.cmd import robot
 
 
-def get_parser() -> argparse.ArgumentParser:
-    """Return the CLI argument parser.
+LOGGER = logging.getLogger("pyarazzo")
+LOGGER.setLevel(logging.WARNING)
 
-    Returns:
-        An argparse parser.
-    """
-    parser = argparse.ArgumentParser(prog="pyarazzo")
-    parser.add_argument("-V", "--version", action="version", version=f"%(prog)s {debug.get_version()}")
-    parser.add_argument("--debug-info", action=_DebugInfo, help="Print debug information.")
-    return parser
+__version__ = "v0.0.1"
+
+name= "pyarazzo"
 
 
-def main(args: list[str] | None = None) -> int:
-    """Run the main program.
+HELP_BLURB = (
+    "To see help text, you can run:\n"
+    "\n"
+    "  pyarazzo --help\n"
+    "  pyarazzo <command> --help\n"
+    "  pyarazzo <command> <subcommand> --help\n"
+)
 
-    This function is executed when you type `pyarazzo` or `python -m pyarazzo`.
+# generated from https://texteditor.com/ascii-art/
+# pylint: disable=anomalous-backslash-in-string
+LOGO = (
+   "                       ___                              \n"
+   "    ____  __  __      /   |  _________ _________  ____  \n"
+   "   / __ \\/ / / /_____/ /| | / ___/ __ `/_  /_  / / __ \\ \n"
+   "  / /_/ / /_/ /_____/ ___ |/ /  / /_/ / / /_/ /_/ /_/ / \n"
+   " / .___/\\__, /     /_/  |_/_/   \\__,_/ /___/___/\\____/  \n"
+   "/_/    /____/                                             "
+)
 
-    Parameters:
-        args: Arguments passed from the command line.
+USAGE = (
+    "pyarazzo [verbose options] <command> <subcommand> " "[parameters]\n" f"{HELP_BLURB}"
+)
 
-    Returns:
-        An exit code.
-    """
-    parser = get_parser()
-    opts = parser.parse_args(args=args)
-    print(opts)
-    return 0
+@click.group()
+@click.version_option(__version__)
+@click.option('-v', '--verbose', count=True)
+def cli(verbose):
+    if verbose == 1 :
+        logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    elif verbose > 1:
+        logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+    else:
+        logging.basicConfig(stream=sys.stdout, level=logging.WARNING)
+
+
+cli.add_command(doc)
+cli.add_command(robot)
+
+
+def main():
+    """Main function"""
+    try:
+        click.echo(LOGO)
+        ctx = cli.make_context("cli", sys.argv[1:])
+        with ctx:
+            result = cli.invoke(ctx)
+            sys.exit(result)
+    except click.exceptions.Exit as error:
+        # click lib uses a exception to terminate the program
+        # also in success case
+        sys.exit(error.exit_code)
+    except click.ClickException as error:
+        LOGGER.error(error)
+        LOGGER.debug(str(error))
+        sys.exit(-1)
+    except Exception as error:  # pylint: disable=broad-except
+        LOGGER.critical(error)
+        LOGGER.exception(error)
+        LOGGER.debug(str(error))
+        sys.exit(-2)
+

@@ -1,7 +1,7 @@
+"""Robot framework command sub group."""
 import click
 
 
 @click.group()
-def robot():
-    """robot framework related commands"""
-    pass
+def robot()-> None:
+    """Robot framework related commands."""

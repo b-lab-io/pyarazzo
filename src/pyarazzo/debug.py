@@ -81,7 +81,10 @@ def get_debug_info() -> Environment:
     """
     py_name, py_version = _interpreter_name_version()
     packages = ["pyarazzo"]
-    variables = ["PYTHONPATH", *[var for var in os.environ if var.startswith("PYARAZZO")]]
+    variables = [
+        "PYTHONPATH",
+        *[var for var in os.environ if var.startswith("PYARAZZO")],
+    ]
     return Environment(
         interpreter_name=py_name,
         interpreter_version=py_version,
@@ -96,7 +99,9 @@ def print_debug_info() -> None:
     """Print debug/environment information."""
     info = get_debug_info()
     print(f"- __System__: {info.platform}")
-    print(f"- __Python__: {info.interpreter_name} {info.interpreter_version} ({info.interpreter_path})")
+    print(
+        f"- __Python__: {info.interpreter_name} {info.interpreter_version} ({info.interpreter_path})",
+    )
     print("- __Environment variables__:")
     for var in info.variables:
         print(f"  - `{var.name}`: `{var.value}`")

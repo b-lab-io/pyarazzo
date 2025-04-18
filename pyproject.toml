@@ -35,7 +35,9 @@ dependencies = [
     "openapi-pydantic>=0.5.1",
     "pydantic>=2.10.4",
     "pyyaml>=6.0.2",
+    "requests>=2.32.3",
     "robotframework>=7.1.1",
+    "types-requests>=2.32.0.20250328",
 ]
 
 [project.urls]

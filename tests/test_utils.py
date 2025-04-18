@@ -1,0 +1,125 @@
+"""Test utils package."""
+# ruff: noqa
+import json
+import tempfile
+from unittest.mock import MagicMock, patch
+
+import click
+import pytest
+import yaml
+
+from pyarazzo import utils  # Replace "your_module" with the actual module name
+
+
+@pytest.fixture
+def valid_json_file():
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json") as tmp:
+        json.dump({"key": "value"}, tmp)
+        tmp.flush()
+        yield tmp.name
+
+@pytest.fixture
+def valid_yaml_file():
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml") as tmp:
+        yaml.dump({"key": "value"}, tmp)
+        tmp.flush()
+        yield tmp.name
+
+def test_load_spec_valid_json():
+    spec = utils.load_spec("./tests/data/test_utils_valid.json")
+    assert spec is not None
+    assert isinstance(spec, dict)
+
+def test_load_spec_valid_yaml():
+    spec = utils.load_spec("./tests/data/test_utils_valid.yaml")
+    assert spec is not None
+    assert isinstance(spec, dict)
+
+def test_load_spec_invalid_file_format():
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt") as tmp:
+        tmp.write("Invalid content")
+        tmp.flush()
+        with pytest.raises(click.exceptions.Abort):
+            utils.load_spec(tmp.name)
+
+@patch("requests.get")
+def test_load_from_url_valid_json(mock_get):
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"key": "value"}
+    mock_response.headers = {"Content-Type": "application/json"}
+    mock_get.return_value = mock_response
+    spec = utils.load_from_url("https://example.com/spec.json")
+    assert spec == {"key": "value"}
+
+@patch("requests.get")
+def test_load_from_url_valid_yaml(mock_get):
+    mock_response = MagicMock()
+    mock_response.text = "key: value"
+    mock_response.headers = {"Content-Type": "application/yaml"}
+    mock_get.return_value = mock_response
+    spec = utils.load_from_url("https://example.com/spec.yaml")
+    assert spec == {"key": "value"}
+
+@patch("requests.get")
+def test_load_from_url_unsupported_content_type(mock_get):
+    mock_response = MagicMock()
+    mock_response.headers = {"Content-Type": "text/plain"}
+    mock_get.return_value = mock_response
+    with pytest.raises(ValueError):
+        utils.load_from_url("https://example.com/spec.txt")
+
+def test_load_from_file_valid_json(valid_json_file):
+    spec = utils.load_from_file(valid_json_file)
+    assert spec == {"key": "value"}
+
+def test_load_from_file_valid_yaml(valid_yaml_file):
+    spec = utils.load_from_file(valid_yaml_file)
+    assert spec == {"key": "value"}
+
+def test_load_from_file_unsupported_extension():
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt") as tmp:
+        tmp.write("Invalid content")
+        tmp.flush()
+        with pytest.raises(ValueError):
+            utils.load_from_file(tmp.name)
+
+def test_load_data_valid_local_file(valid_json_file):
+    spec = utils.load_data(valid_json_file)
+    assert spec == {"key": "value"}
+
+@patch("requests.get")
+def test_load_data_valid_url(mock_get):
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"key": "value"}
+    mock_response.headers = {"Content-Type": "application/json"}
+    mock_get.return_value = mock_response
+    spec = utils.load_data("https://example.com/spec.json")
+    assert spec == {"key": "value"}
+
+def test_schema_validation_valid_spec():
+    with open("./tests/data/test_utils_valid.json") as file:
+        spec=  json.load(file)
+    utils.schema_validation(spec)  # Should not raise an exception
+
+def test_schema_validation_invalid_spec():
+    spec = {"invalid_key": "value"}
+    with pytest.raises(click.ClickException):
+        utils.schema_validation(spec)
+
+@patch("requests.get")
+def test_load_data_url_http_error(mock_get):
+    mock_response = MagicMock()
+    mock_response.raise_for_status.side_effect = Exception("HTTP Error")
+    mock_get.return_value = mock_response
+    with pytest.raises(click.Abort):
+        utils.load_data("https://example.com/spec.json")
+
+def test_load_data_invalid_local_file():
+    with pytest.raises(click.Abort):
+        utils.load_data("non_existent_file.json")
+
+def test_load_data_invalid_json(valid_json_file):
+    with open(valid_json_file, "w") as f:
+        f.write("Invalid JSON")
+    with pytest.raises(click.Abort):
+        utils.load_data(valid_json_file)

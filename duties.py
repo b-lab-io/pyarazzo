@@ -101,7 +101,9 @@ def check_api(ctx: Context, *cli_args: str) -> None:
 
 
 @duty
-def docs(ctx: Context, *cli_args: str, host: str = "127.0.0.1", port: int = 8000) -> None:
+def docs(
+    ctx: Context, *cli_args: str, host: str = "127.0.0.1", port: int = 8000,
+) -> None:
     """Serve the documentation (localhost:8000).
 
     Parameters:
@@ -122,7 +124,10 @@ def docs_deploy(ctx: Context) -> None:
     os.environ["DEPLOY"] = "true"
     with material_insiders() as insiders:
         if not insiders:
-            ctx.run(lambda: False, title="Not deploying docs without Material for MkDocs Insiders!")
+            ctx.run(
+                lambda: False,
+                title="Not deploying docs without Material for MkDocs Insiders!",
+            )
         ctx.run(tools.mkdocs.gh_deploy(), title="Deploying documentation")
 
 
@@ -130,10 +135,15 @@ def docs_deploy(ctx: Context) -> None:
 def format(ctx: Context) -> None:
     """Run formatting tools on the code."""
     ctx.run(
-        tools.ruff.check(*PY_SRC_LIST, config="config/ruff.toml", fix_only=True, exit_zero=True),
+        tools.ruff.check(
+            *PY_SRC_LIST, config="config/ruff.toml", fix_only=True, exit_zero=True,
+        ),
         title="Auto-fixing code",
     )
-    ctx.run(tools.ruff.format(*PY_SRC_LIST, config="config/ruff.toml"), title="Formatting code")
+    ctx.run(
+        tools.ruff.format(*PY_SRC_LIST, config="config/ruff.toml"),
+        title="Formatting code",
+    )
 
 
 @duty
@@ -169,7 +179,11 @@ def release(ctx: Context, version: str = "") -> None:
     if not (version := (version or input("> Version to release: ")).strip()):
         ctx.run("false", title="A version must be provided")
     ctx.run("git add pyproject.toml CHANGELOG.md", title="Staging files", pty=PTY)
-    ctx.run(["git", "commit", "-m", f"chore: Prepare release {version}"], title="Committing changes", pty=PTY)
+    ctx.run(
+        ["git", "commit", "-m", f"chore: Prepare release {version}"],
+        title="Committing changes",
+        pty=PTY,
+    )
     ctx.run(f"git tag {version}", title="Tagging commit", pty=PTY)
     ctx.run("git push", title="Pushing commits", pty=False)
     ctx.run("git push --tags", title="Pushing tags", pty=False)

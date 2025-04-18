@@ -2,17 +2,21 @@
 
 from __future__ import annotations
 
-import pytest
+from typing import TYPE_CHECKING
+
 from click.testing import CliRunner
 
 from pyarazzo import cli, debug
 
+if TYPE_CHECKING:
+    import pytest
+
+
 def test_main() -> None:
     """Basic CLI test."""
     runner = CliRunner()
-    result = runner.invoke(cli, [])
+    result = runner.invoke(cli, [])# type: ignore[arg-type]
     assert result.exit_code == 1
-
 
 
 # def test_show_help(capsys: pytest.CaptureFixture) -> None:
@@ -21,7 +25,7 @@ def test_main() -> None:
 #     Parameters:
 #         capsys: Pytest fixture to capture output.
 #     """
-    
+
 #     with pytest.raises(SystemExit):
 #         runner = CliRunner()
 #         result = runner.invoke(cli, ['-h'])
@@ -36,13 +40,12 @@ def test_show_version(capsys: pytest.CaptureFixture) -> None:
     Parameters:
         capsys: Pytest fixture to capture output.
     """
-    with pytest.raises(SystemExit):
-        runner = CliRunner()
-        result = runner.invoke(cli, ['-V'])
-       
+    runner = CliRunner()
+    result = runner.invoke(cli, ["-v"])# type: ignore[arg-type]
+
     captured = capsys.readouterr()
     assert debug.get_version() in captured.out
-    assert result.exit_code == 1
+    assert result.exit_code == 0
 
 
 # def test_show_debug_info(capsys: pytest.CaptureFixture) -> None:

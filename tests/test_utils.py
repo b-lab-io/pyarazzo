@@ -13,7 +13,7 @@ from pyarazzo import utils  # Replace "your_module" with the actual module name
 
 
 @pytest.fixture
-def valid_json_file()-> Generator[str, Any, None]:
+def valid_json_file()-> Generator[str, Any]:
     """Generate a valid Json file."""
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json") as tmp:
         json.dump({"key": "value"}, tmp)
@@ -21,7 +21,7 @@ def valid_json_file()-> Generator[str, Any, None]:
         yield tmp.name
 
 @pytest.fixture
-def valid_yaml_file()-> Generator[str, Any, None]:
+def valid_yaml_file()-> Generator[str, Any]:
     """Generate a valid yaml file."""
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml") as tmp:
         yaml.dump({"key": "value"}, tmp)

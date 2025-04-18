@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
+#from typing import TYPE_CHECKING
 from click.testing import CliRunner
 
-from pyarazzo import cli, debug
+from pyarazzo import cli  #, debug
 
-if TYPE_CHECKING:
-    import pytest
+# if TYPE_CHECKING:
+#     import pytest
 
 
 def test_main() -> None:

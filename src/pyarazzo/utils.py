@@ -13,8 +13,9 @@ from jsonschema import ValidationError, validate
 LOGGER = logging.getLogger(__name__)
 
 # Load tge arazzo specification Schema for resources
-with importlib.resources.open_text("pyarazzo", "schema.yaml") as schema_file:
+with importlib.resources.files("pyarazzo").joinpath("schema.yaml").open("r") as schema_file:
     schema = yaml.safe_load(schema_file)
+
 
 
 def load_spec(path_or_url: str) -> dict:

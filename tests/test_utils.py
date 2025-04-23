@@ -15,7 +15,7 @@ from pyarazzo import utils  # Replace "your_module" with the actual module name
 @pytest.fixture
 def valid_json_file()-> Generator[str, Any]:
     """Generate a valid Json file."""
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".json") as tmp:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", dir=".") as tmp:
         json.dump({"key": "value"}, tmp)
         tmp.flush()
         yield tmp.name
@@ -23,7 +23,7 @@ def valid_json_file()-> Generator[str, Any]:
 @pytest.fixture
 def valid_yaml_file()-> Generator[str, Any]:
     """Generate a valid yaml file."""
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml") as tmp:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", dir=".") as tmp:
         yaml.dump({"key": "value"}, tmp)
         tmp.flush()
         yield tmp.name
@@ -42,7 +42,7 @@ def test_load_spec_valid_yaml()->None:
 
 def test_load_spec_invalid_file_format()->None:
     """Read the test method name."""
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt") as tmp:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", dir=".") as tmp:
         tmp.write("Invalid content")
         tmp.flush()
         with pytest.raises(click.exceptions.Abort):
@@ -89,7 +89,7 @@ def test_load_from_file_valid_yaml(valid_yaml_file:Any)->None:
 
 def test_load_from_file_unsupported_extension()->None:
     """Read the test method name."""
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt") as tmp:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", dir=".") as tmp:
         tmp.write("Invalid content")
         tmp.flush()
         with pytest.raises(ValueError):  # noqa: PT011

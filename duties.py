@@ -76,7 +76,7 @@ def check_docs(ctx: Context) -> None:
     Path("htmlcov/index.html").touch(exist_ok=True)
     with material_insiders():
         ctx.run(
-            tools.mkdocs.build(strict=True, verbose=True),
+            tools.mkdocs.build(strict=True, verbose=False),
             title=pyprefix("Building documentation"),
         )
 

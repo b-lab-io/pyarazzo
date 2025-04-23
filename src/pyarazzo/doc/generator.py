@@ -8,7 +8,6 @@ from pyarazzo.model.arazzo import (
     ComponentsObject,
     CriterionExpressionTypeObject,
     Info,
-    MetaData,
     ParameterObject,
     PayloadReplacementObject,
     ReusableObject,
@@ -29,6 +28,7 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
             output_dir (str): _description_
         """
         self.output_dir = output_dir
+        self.content = ""
         os.makedirs(output_dir, exist_ok=True)
 
     def plantumlify(self, name: str) -> str:
@@ -49,61 +49,60 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
             spec (ArazzoSpec): _description_
         """
         for wf in spec.workflows:
+            self.content = ""
             self.visit_workflow(wf)
 
     def visit_workflow(self, workflow: Workflow) -> None:
         """Generate markdown content for a workflow, including PlantUML diagram."""
-        LOGGER.info(f"Generation of workflow: {workflow.workflowId}")
+        LOGGER.info(f"Generation of workflow: {workflow.workflow_id}")
         filename = os.path.join(
-            self.output_dir, f"{workflow.workflowId.replace(' ', '_').lower()}.md",
+            self.output_dir, f"{workflow.workflow_id.root.replace(' ', '_').lower()}.md",
         )
 
         # Start building the markdown content
-        content = f"# {workflow.workflowId}\n\n"
-        content += f"{workflow.description}\n\n"
+        self.content = f"# {workflow.workflow_id}\n\n"
+        self.content += f"{workflow.description}\n\n"
 
         # Add PlantUML diagram
-        content += "## Workflow Diagram\n\n"
-        content += "```plantuml\n"
-        content += "@startuml\n"
-        content += "skinparam backgroundColor #EEEBDC\n"
-        content += "skinparam handwritten true\n\n"
+        self.content += "## Workflow Diagram\n\n"
+        self.content += "```plantuml\n"
+        self.content += "@startuml\n"
+        self.content += "skinparam backgroundColor #EEEBDC\n"
+        self.content += "skinparam handwritten true\n\n"
 
-        content += f'participant "{workflow.workflowId}" as {self.plantumlify(workflow.workflowId)}\n'
+        self.content += f'participant "{workflow.workflow_id}" as {self.plantumlify(workflow.workflow_id.root)}\n'
 
         # Adding steps to the diagram
         for step in workflow.steps:
-            content += (
-                f'participant "{step.stepId}" as {self.plantumlify(step.stepId)}\n'
+            self.content += (
+                f'participant "{step.step_id}" as {self.plantumlify(step.step_id.root)}\n'
             )
 
-        if workflow.dependsOn:
-            for depending_wf in workflow.dependsOn:
-                content += f"WF_{self.plantumlify(depending_wf)} --> {self.plantumlify(workflow.workflowId)}\n"
+        if workflow.depends_on:
+            for depending_wf in workflow.depends_on:
+                self.content += f"WF_{self.plantumlify(depending_wf)} --> {self.plantumlify(workflow.workflow_id.root)}\n"
 
         # Adding dependencies to the diagram        for step in workflow.steps:
         for step in workflow.steps:
-            content += f"{self.plantumlify(workflow.workflowId)} --> {self.plantumlify(step.stepId)} : {step.description}\n"
+            self.content += f"{self.plantumlify(workflow.workflow_id.root)} --> {self.plantumlify(step.step_id.root)} : {step.description}\n"
 
-        content += "@enduml\n```\n\n"
+        self.content += "@enduml\n```\n\n"
 
         # Add step descriptions
-        content += "## Steps\n\n"
+        self.content += "## Steps\n\n"
         for step in workflow.steps:
-            step_content = step.accept(self)
-            content += step_content
-
+            step.accept(self)
         # Write to file
         with open(filename, "w") as f:
-            f.write(content)
+            f.write(self.content)
 
         LOGGER.info(f"Generated: {filename}")
 
-    def visit_step(self, step: Step) -> str:
+    def visit_step(self, step: Step) -> None:
         """Generate markdown content for a step."""
-        content = f"### {step.stepId}\n\n"
-        content += f"**ID**: {step.stepId}\n\n"
-        content += f"{step.description}\n\n"
+        self.content = f"### {step.step_id}\n\n"
+        self.content += f"**ID**: {step.step_id}\n\n"
+        self.content += f"{step.description}\n\n"
 
         # if step.depends_on:
         #     content += "**Dependencies**:\n"
@@ -111,7 +110,6 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
         #         content += f"- {dependency}\n"
         #     content += "\n"
 
-        return content
 
 
     def visit_info(self, instance: Info)-> None:
@@ -151,13 +149,6 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
 
     def visit_payload_replacement(self, instance: PayloadReplacementObject)-> None:
         """Visit PayloadReplacementObject instance.
-
-        Args:
-            instance (Info): _description_
-        """
-
-    def visit_meta_data(self, instance: MetaData)-> None:
-        """Visit MetaData instance.
 
         Args:
             instance (Info): _description_

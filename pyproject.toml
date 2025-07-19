@@ -18,7 +18,6 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
     "Topic :: Documentation",
     "Topic :: Software Development",
     "Topic :: Utilities",
@@ -82,6 +81,7 @@ data = [
 dev = [
     # dev
     "editables>=0.5",
+    "pytest",
     # maintenance
     "build>=1.2",
     "git-changelog>=2.5",

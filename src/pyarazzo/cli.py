@@ -1,5 +1,4 @@
 """Entry point module of the tool."""
-
 import logging
 import sys
 
@@ -35,10 +34,7 @@ LOGO = (
     "/_/    /____/                                             "
 )
 
-USAGE = (
-    "pyarazzo [verbose options] <command> <subcommand> [parameters]\n"
-    f"{HELP_BLURB}"
-)
+USAGE = "pyarazzo [verbose options] <command> <subcommand> [parameters]\n" + f"{HELP_BLURB}"
 
 
 @click.group()

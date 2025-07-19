@@ -11,14 +11,14 @@ from typing import Annotated, Any
 
 from pydantic import BaseModel, Field, RootModel
 
-from pyarazzo.utils import load_spec
-
+#from pyarazzo.utils import load_spec
+import pyarazzo.utils as utils
 
 class ArazzoVisitor(ABC):
     """Abstract Arazzo Vistor class."""
 
     @abstractmethod
-    def visit_specification(self, instance: ArazzoSpecification)-> None:
+    def visit_specification(self, instance: ArazzoSpecification) -> None:
         """Visit ArazzoSpecification instance.
 
         Args:
@@ -26,7 +26,7 @@ class ArazzoVisitor(ABC):
         """
 
     @abstractmethod
-    def visit_workflow(self, instance: Workflow)-> None:
+    def visit_workflow(self, instance: Workflow) -> None:
         """Visit Workflow instance.
 
         Args:
@@ -34,16 +34,15 @@ class ArazzoVisitor(ABC):
         """
 
     @abstractmethod
-    def visit_step(self, instance: Step)-> None:
+    def visit_step(self, instance: Step) -> None:
         """Visit Step instance.
 
         Args:
             instance (Step): _description_
         """
 
-
     @abstractmethod
-    def visit_components(self, instance: ComponentsObject)-> None:
+    def visit_components(self, instance: ComponentsObject) -> None:
         """Visit ComponentsObject instance.
 
         Args:
@@ -51,7 +50,7 @@ class ArazzoVisitor(ABC):
         """
 
     @abstractmethod
-    def visit_info(self, instance: Info)-> None:
+    def visit_info(self, instance: Info) -> None:
         """Visit Info instance.
 
         Args:
@@ -59,7 +58,7 @@ class ArazzoVisitor(ABC):
         """
 
     @abstractmethod
-    def visit_source_decription(self, instance: SourceDescriptionObject)-> None:
+    def visit_source_decription(self, instance: SourceDescriptionObject) -> None:
         """Visit SourceDescriptionObject instance.
 
         Args:
@@ -67,7 +66,7 @@ class ArazzoVisitor(ABC):
         """
 
     @abstractmethod
-    def visit_criterion_expression_type(self, instance: CriterionExpressionTypeObject)-> None:
+    def visit_criterion_expression_type(self, instance: CriterionExpressionTypeObject) -> None:
         """Visit CriterionExpressionTypeObject instance.
 
         Args:
@@ -75,7 +74,7 @@ class ArazzoVisitor(ABC):
         """
 
     @abstractmethod
-    def visit_reusable(self, instance: ReusableObject)-> None:
+    def visit_reusable(self, instance: ReusableObject) -> None:
         """Visit ReusableObject instance.
 
         Args:
@@ -83,7 +82,7 @@ class ArazzoVisitor(ABC):
         """
 
     @abstractmethod
-    def visit_parameter(self, instance: ParameterObject)-> None:
+    def visit_parameter(self, instance: ParameterObject) -> None:
         """Visit ParameterObject instance.
 
         Args:
@@ -91,7 +90,7 @@ class ArazzoVisitor(ABC):
         """
 
     @abstractmethod
-    def visit_payload_replacement(self, instance: PayloadReplacementObject)-> None:
+    def visit_payload_replacement(self, instance: PayloadReplacementObject) -> None:
         """Visit PayloadReplacementObject instance.
 
         Args:
@@ -103,12 +102,13 @@ class ArazzoElement(BaseModel):
     """Base class for all Arazzo elements."""
 
     @abstractmethod
-    def accept(self, visitor: ArazzoVisitor)->None:
+    def accept(self, visitor: ArazzoVisitor) -> None:
         """Accept a visitor to process this element."""
 
 
 class Info(ArazzoElement):
     """The object provides metadata about API workflows defined in this Arazzo document. The metadata MAY be used by the clients if needed."""
+
     title: Annotated[
         str,
         Field(description="A human readable title of the Arazzo Description"),
@@ -119,66 +119,75 @@ class Info(ArazzoElement):
     ]
     description: Annotated[
         str,
-        Field(None,
+        Field(
+            None,
             description="A description of the purpose of the workflows defined. CommonMark syntax MAY be used for rich text representation",
         ),
     ]
     version: Annotated[
         str,
-        Field(...,
+        Field(
+            ...,
             description="The version identifier of the Arazzo document (which is distinct from the Arazzo Specification version)",
         ),
     ]
 
-    def accept(self, visitor: ArazzoVisitor)-> None:
+    def accept(self, visitor: ArazzoVisitor) -> None:
         """Accept instance of Arazzo Visitor."""
         return visitor.visit_info(self)
 
 
 class SourceType(str, Enum):
     """The type of source description."""
+
     arazzo = "arazzo"
     openapi = "openapi"
 
 
 class SourceDescriptionObject(ArazzoElement):
     """Describes a source description (such as an OpenAPI description) that will be referenced by one or more workflows described within an Arazzo Description."""
+
     name: Annotated[
         str,
-        Field(...,
+        Field(
+            ...,
             description="A unique name for the source description",
             pattern=r"^[A-Za-z0-9_\\-]+$",
         ),
     ]
     url: Annotated[
         str,
-        Field(...,description="A URL to a source description to be used by a workflow"),
+        Field(..., description="A URL to a source description to be used by a workflow"),
     ]
     type: Annotated[
         SourceType,
         Field(None, description="The type of source description"),
     ]
 
-    def accept(self, visitor: ArazzoVisitor)-> None:
+    def accept(self, visitor: ArazzoVisitor) -> None:
         """Accept instance of Arazzo Visitor."""
         return visitor.visit_source_decription(self)
 
 
-class CriterionExpressionTypeObjectType(str,Enum):
+class CriterionExpressionTypeObjectType(str, Enum):
     """The type of condition to be applied."""
+
     jsonpath = "jsonpath"
     xpath = "xpath"
 
+
 class CriterionExpressionTypeObjectVersion(str, Enum):
     """A short hand string representing the version of the expression type."""
-    JSONPATH= "draft-goessner-dispatch-jsonpath-00"
-    XPATH30 ="xpath-30"
+
+    JSONPATH = "draft-goessner-dispatch-jsonpath-00"
+    XPATH30 = "xpath-30"
     XPATH20 = "xpath-20"
     XPATH10 = "xpath-10"
 
 
 class CriterionExpressionTypeObject(ArazzoElement):
     """An object used to describe the type and version of an expression used within a Criterion Object."""
+
     type: Annotated[CriterionExpressionTypeObjectType, Field(description="The type of condition to be applied")]
     version: Annotated[
         CriterionExpressionTypeObjectVersion,
@@ -187,19 +196,21 @@ class CriterionExpressionTypeObject(ArazzoElement):
         ),
     ]
 
-    def accept(self, visitor: ArazzoVisitor)-> None:
+    def accept(self, visitor: ArazzoVisitor) -> None:
         """Accept instance of Arazzo Visitor."""
         return visitor.visit_criterion_expression_type(self)
 
 
 class SuccessActionObjectType(str, Enum):
     """The type of action to take."""
+
     end = "end"
     goto = "goto"
 
 
 class FailureActionObjectType(str, Enum):
     """The type of action to take."""
+
     end = "end"
     goto = "goto"
     retry = "retry"
@@ -207,22 +218,24 @@ class FailureActionObjectType(str, Enum):
 
 class ReusableObject(ArazzoElement):
     """A simple object to allow referencing of objects contained within the Components Object."""
+
     reference: Annotated[
         str,
         Field(description="A runtime expression used to reference the desired object"),
     ]
     value: Annotated[
-        str|int|float,
+        str | int | float,
         Field(None, description="lists a value of the referenced parameter"),
     ]
 
-    def accept(self, visitor: ArazzoVisitor)-> None:
+    def accept(self, visitor: ArazzoVisitor) -> None:
         """Accept instance of Arazzo Visitor."""
         return visitor.visit_reusable(self)
 
 
 class In(str, Enum):
     """The location of the parameter."""
+
     path = "path"
     query = "query"
     header = "header"
@@ -232,9 +245,10 @@ class In(str, Enum):
 
 class ParameterObject(ArazzoElement):
     """Describes a single step parameter. A unique parameter is defined by the combination of a name and in fields."""
+
     name: Annotated[str, Field(..., description="The name of the parameter")]
     in_: Annotated[
-        In|None,
+        In | None,
         Field(None, alias="in", description="The named location of the parameter"),
     ]
     value: Annotated[
@@ -242,16 +256,18 @@ class ParameterObject(ArazzoElement):
         Field(..., description="The value to pass in the parameter"),
     ]
 
-    def accept(self, visitor: ArazzoVisitor)-> None:
+    def accept(self, visitor: ArazzoVisitor) -> None:
         """Accept instance of Arazzo Visitor."""
         return visitor.visit_parameter(self)
 
 
 class PayloadReplacementObject(ArazzoElement):
     """Describes a location within a payload (e.g., a request body) and a value to set within the location."""
+
     target: Annotated[
         str,
-        Field(...,
+        Field(
+            ...,
             description="A JSON Pointer or XPath Expression which MUST be resolved against the request body",
         ),
     ]
@@ -260,14 +276,15 @@ class PayloadReplacementObject(ArazzoElement):
         Field(..., description="The value list within the target location"),
     ]
 
-    def accept(self, visitor: ArazzoVisitor)-> None:
+    def accept(self, visitor: ArazzoVisitor) -> None:
         """Accept instance of Arazzo Visitor."""
         return visitor.visit_payload_replacement(self)
 
 
 class StepId(RootModel):
     """Unique string to represent the step."""
-    root:  Annotated[
+
+    root: Annotated[
         str,
         Field(..., description="Unique string to represent the step", pattern="[A-Za-z0-9_\\-]+"),
     ]
@@ -275,13 +292,16 @@ class StepId(RootModel):
 
 class WorkflowId(RootModel):
     """The workflowId referencing an existing workflow within the Arazzo Description to transfer to upon success of the step."""
+
     root: Annotated[
         str,
         Field(..., description="Unique string to represent the workflow", pattern="[A-Za-z0-9_\\-]+"),
     ]
 
+
 class RequestBodyObject(BaseModel):
     """A single request body describing the Content-Type and request body content to be passed by a step to an operation."""
+
     content_type: Annotated[
         str,
         Field(None, description="The Content-Type for the request content", alias="contentType"),
@@ -292,47 +312,57 @@ class RequestBodyObject(BaseModel):
     ]
     replacements: Annotated[
         list[PayloadReplacementObject],
-        Field([],
+        Field(
+            [],
             description="A list of locations and values to list within a payload",
         ),
     ]
 
+
 class CriterionObjectConditiontype(str, Enum):
     """Type of the condition."""
-    SIMPLE="simple"
-    REGEX="regex"
-    JSONPATH="jsonpath"
-    XPATH="xpath"
+
+    SIMPLE = "simple"
+    REGEX = "regex"
+    JSONPATH = "jsonpath"
+    XPATH = "xpath"
 
 
 class CriterionObject(BaseModel):
     """An object used to specify the context, conditions, and condition types that can be used to prove or satisfy assertions specified in Step Object successCriteria, Success Action Object criteria, and Failure Action Object criteria."""
+
     context: Annotated[
         RuntimeExpression,
-        Field(None,
+        Field(
+            None,
             description="A Runtime Expression used to set the context for the condition to be applied on.",
         ),
     ]
     condition: Annotated[
         str,
-        Field(...,
+        Field(
+            ...,
             description="A Runtime Expression used to set the context for the condition to be applied on.",
         ),
     ]
     type: Annotated[
         CriterionObjectConditiontype,
-        Field(CriterionObjectConditiontype.SIMPLE,
+        Field(
+            CriterionObjectConditiontype.SIMPLE,
             description="The type of condition to be applied",
         ),
     ]
 
+
 class SuccessActionObject(BaseModel):
     """A single success action which describes an action to take upon success of a workflow step."""
+
     name: Annotated[str, Field(description="The name of the success action")]
     type: Annotated[SuccessActionObjectType, Field(description="The type of action to take")]
     workflow_id: Annotated[
         WorkflowId,
-        Field(None,
+        Field(
+            None,
             description="The workflowId referencing an existing workflow within the Arazzo description to transfer to upon success of the step",
             alias="workflowId",
         ),
@@ -343,7 +373,8 @@ class SuccessActionObject(BaseModel):
     ]
     criteria: Annotated[
         list[CriterionObject],
-        Field([],
+        Field(
+            [],
             description="A list of assertions to determine if this action SHALL be executed",
             min_length=1,
         ),
@@ -352,19 +383,22 @@ class SuccessActionObject(BaseModel):
 
 class FailureActionObject(BaseModel):
     """A single failure action which describes an action to take upon failure of a workflow step."""
+
     name: Annotated[str, Field(description="The name of the failure action")]
     type: Annotated[FailureActionObjectType, Field(description="The type of action to take")]
     workflow_id: Annotated[
         WorkflowId,
-        Field( None,
+        Field(
+            None,
             description="The workflowId referencing an existing workflow within the Arazzo description to transfer to upon failure of the step",
             alias="WorkflowId",
         ),
     ]
-    step_id: Annotated[StepId, Field(description="Unique string to represent the step",alias="stepId")]
+    step_id: Annotated[StepId, Field(description="Unique string to represent the step", alias="stepId")]
     retry_after: Annotated[
         float | None,
-        Field( None,
+        Field(
+            None,
             description="A non-negative decimal indicating the seconds to delay after the step failure before another attempt SHALL be made",
             ge=0.0,
             alias="retryAfter",
@@ -372,7 +406,8 @@ class FailureActionObject(BaseModel):
     ]
     retry_limit: Annotated[
         int,
-        Field( None,
+        Field(
+            None,
             description="A non-negative integer indicating how many attempts to retry the step MAY be attempted before failing the overall step",
             ge=0,
             alias="retryLimit",
@@ -385,51 +420,60 @@ class FailureActionObject(BaseModel):
         ),
     ] = []
 
+
 class Step(ArazzoElement):
     """Describes a single workflow step which MAY be a call to an API operation (OpenAPI Operation Object) or another Workflow Object."""
-    step_id: Annotated[StepId, Field(..., description="Unique string to represent the step",alias="stepId")]
+
+    step_id: Annotated[StepId, Field(..., description="Unique string to represent the step", alias="stepId")]
     description: Annotated[
         str,
-        Field(None,
+        Field(
+            None,
             description="A description of the step. CommonMark syntax MAY be used for rich text representation",
         ),
     ]
     operation_id: Annotated[
         str,
-        Field(None,
+        Field(
+            None,
             description="The name of an existing, resolvable operation, as defined with a unique operationId and existing within one of the sourceDescriptions",
             alias="operationId",
         ),
     ]
     operation_path: Annotated[
         str,
-        Field(None,
+        Field(
+            None,
             description="A reference to a Source combined with a JSON Pointer to reference an operation",
             alias="operationPath",
         ),
     ]
     workflow_id: Annotated[
         WorkflowId,
-        Field(None,
+        Field(
+            None,
             description="The workflowId referencing an existing workflow within the Arazzo description",
             alias="workflowId",
         ),
     ]
     parameters: Annotated[
-        list[ParameterObject| ReusableObject],
-        Field([],
+        list[ParameterObject | ReusableObject],
+        Field(
+            [],
             description="A list of parameters that MUST be passed to an operation or workflow as referenced by operationId, operationPath, or workflowId",
         ),
     ]
     request_body: Annotated[
         RequestBodyObject,
-        Field([],
+        Field(
+            [],
             description="A list of parameters that MUST be passed to an operation or workflow as referenced by operationId, operationPath, or workflowId",
         ),
     ]
     success_criteria: Annotated[
         list[CriterionObject],
-        Field([],
+        Field(
+            [],
             description="A list of assertions to determine the success of the step",
             min_length=1,
             alias="successCriteria",
@@ -437,33 +481,39 @@ class Step(ArazzoElement):
     ]
     on_success: Annotated[
         list[SuccessActionObject | ReusableObject],
-        Field([],
+        Field(
+            [],
             description="An array of success action objects that specify what to do upon step success",
             alias="onSuccess",
         ),
     ]
     on_failure: Annotated[
         list[FailureActionObject | ReusableObject],
-        Field([],
+        Field(
+            [],
             description="An array of failure action objects that specify what to do upon step failure",
             alias="onFailure",
         ),
     ]
     outputs: Annotated[
         dict[str, Any],
-        Field(dict,
+        Field(
+            dict,
             description="A map between a friendly name and a dynamic output value defined using a runtime expression",
         ),
     ]
 
-    def accept(self, visitor: ArazzoVisitor)-> None:
+    def accept(self, visitor: ArazzoVisitor) -> None:
         """Accept instance of Arazzo Visitor."""
         return visitor.visit_step(self)
 
 
 class RuntimeExpression(RootModel):
     """A  runtime expression allows values to be defined based on information that will be available within the HTTP message in an actual API call, or within objects serialized from the Arazzo document such as workflows or steps."""
-    root: Annotated[str, Field(description="", pattern="^$\\$sourceDescriptions\\.([A-Za-z0-9_\\-]+)\\.([A-Za-z0-9_\\-]+)$")]
+
+    root: Annotated[
+        str, Field(description="", pattern="^$\\$sourceDescriptions\\.([A-Za-z0-9_\\-]+)\\.([A-Za-z0-9_\\-]+)$"),
+    ]
 
 
 class Workflow(ArazzoElement):
@@ -471,7 +521,7 @@ class Workflow(ArazzoElement):
 
     workflow_id: Annotated[
         WorkflowId,
-        Field(...,description="Unique string to represent the workflow", alias="workflowId"),
+        Field(..., description="Unique string to represent the workflow", alias="workflowId"),
     ]
     summary: Annotated[
         str,
@@ -479,39 +529,48 @@ class Workflow(ArazzoElement):
     ]
     description: Annotated[
         str,
-        Field(None,
+        Field(
+            None,
             description="A description of the workflow. CommonMark syntax MAY be used for rich text representation",
         ),
     ]
     inputs: Annotated[
         dict,
-        Field(None,
+        Field(
+            None,
             description="A JSON Schema 2020-12 object representing the input parameters used by this workflow",
         ),
     ]
     depends_on: Annotated[
         list[str],
-        Field([],
-            description="A list of workflows that MUST be completed before this workflow can be processed",alias="dependsOn",
+        Field(
+            [],
+            description="A list of workflows that MUST be completed before this workflow can be processed",
+            alias="dependsOn",
         ),
     ]
     steps: Annotated[
         list[Step],
-        Field(...,
+        Field(
+            ...,
             description="An ordered list of steps where each step represents a call to an API operation or to another workflow",
             min_length=1,
         ),
     ]
     success_actions: Annotated[
         list[SuccessActionObject | ReusableObject],
-        Field([],
-            description="A list of success actions that are applicable for all steps described under this workflow",alias="successActions",
+        Field(
+            [],
+            description="A list of success actions that are applicable for all steps described under this workflow",
+            alias="successActions",
         ),
     ]
     failure_actions: Annotated[
         list[FailureActionObject | ReusableObject],
-        Field([],
-            description="A list of failure actions that are applicable for all steps described under this workflow",alias="failureActions",
+        Field(
+            [],
+            description="A list of failure actions that are applicable for all steps described under this workflow",
+            alias="failureActions",
         ),
     ]
     outputs: Annotated[
@@ -520,12 +579,13 @@ class Workflow(ArazzoElement):
     ]
     parameters: Annotated[
         list[ParameterObject | ReusableObject],
-        Field(None,
+        Field(
+            None,
             description="A list of parameters that are applicable for all steps described under this workflow",
         ),
     ]
 
-    def accept(self, visitor: ArazzoVisitor)-> None:
+    def accept(self, visitor: ArazzoVisitor) -> None:
         """Accept instance of Arazzo Visitor."""
         return visitor.visit_workflow(self)
 
@@ -535,48 +595,54 @@ class ComponentsObject(ArazzoElement):
 
     inputs: Annotated[
         dict,
-        Field(None,
+        Field(
+            None,
             description="An object to hold reusable JSON Schema 2020-12 schemas to be referenced from workflow inputs",
         ),
     ]
     parameters: Annotated[
         dict[str, ParameterObject],
-        Field(None,
+        Field(
+            None,
             description="An object to hold reusable Parameter Objects",
         ),
     ]
     success_actions: Annotated[
         dict[str, SuccessActionObject],
-        Field(None,description="An object to hold reusable Success Actions Objects", alias="successActions"),
+        Field(None, description="An object to hold reusable Success Actions Objects", alias="successActions"),
     ]
     failure_actions: Annotated[
         dict[str, FailureActionObject],
-        Field(None,description="An object to hold reusable Failure Actions Objects", alias="failureActions"),
+        Field(None, description="An object to hold reusable Failure Actions Objects", alias="failureActions"),
     ]
 
-    def accept(self, visitor: ArazzoVisitor)-> None:
+    def accept(self, visitor: ArazzoVisitor) -> None:
         """Accept instance of Arazzo Visitor."""
         return visitor.visit_components(self)
 
 
 class ArazzoSpecification(ArazzoElement):
     """This is the root object of the Arazzo Description."""
+
     arazzo: Annotated[
         str,
-        Field(...,
+        Field(
+            ...,
             description="The version number of the Arazzo Specification",
             pattern=r"^1\.0\.\d+(-.+)?$",
         ),
     ]
     info: Annotated[
         Info,
-        Field(...,
+        Field(
+            ...,
             description="Provides metadata about the workflows contain within the Arazzo Description.",
         ),
     ]
     source_descriptions: Annotated[
         list[SourceDescriptionObject],
-        Field(...,
+        Field(
+            ...,
             description="A list of source descriptions such as Arazzo or OpenAPI",
             min_length=1,
             alias="sourceDescriptions",
@@ -584,14 +650,14 @@ class ArazzoSpecification(ArazzoElement):
     ]
     workflows: Annotated[
         list[Workflow],
-        Field(...,description="A list of workflows", min_length=1),
+        Field(..., description="A list of workflows", min_length=1),
     ]
-    components:  Annotated[
+    components: Annotated[
         ComponentsObject,
-        Field(None,description="A list of workflows"),
+        Field(None, description="A list of workflows"),
     ]
 
-    def accept(self, visitor: ArazzoVisitor)-> None:
+    def accept(self, visitor: ArazzoVisitor) -> None:
         """Allows an Arazzo visitor to traverse the instance.
 
         Args:
@@ -603,6 +669,7 @@ class ArazzoSpecification(ArazzoElement):
 
 class ArazzoSpecificationLoader:
     """Helper class to load an Arazzo specific ation from a file or URL."""
+
     @staticmethod
     def load(path_or_url: str) -> ArazzoSpecification:
         """Load and arazzo specification.
@@ -613,5 +680,5 @@ class ArazzoSpecificationLoader:
         Returns:
             ArazzoSpecification: _description_
         """
-        spec_dict = load_spec(path_or_url)
+        spec_dict = utils.load_spec(path_or_url)
         return ArazzoSpecification(**spec_dict)

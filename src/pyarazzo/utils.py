@@ -17,7 +17,6 @@ with importlib.resources.files("pyarazzo").joinpath("schema.yaml").open("r") as 
     schema = yaml.safe_load(schema_file)
 
 
-
 def load_spec(path_or_url: str) -> dict:
     """Load a specification from file in the json or yaml format.
 
@@ -54,11 +53,7 @@ def load_from_url(url: str) -> dict:
     if "application/json" in content_type or url.endswith(".json"):
         return response.json()
 
-    if (
-        "application/yaml" in content_type
-        or "text/yaml" in content_type
-        or url.endswith((".yaml", ",yml"))
-    ):
+    if "application/yaml" in content_type or "text/yaml" in content_type or url.endswith((".yaml", ",yml")):
         return yaml.safe_load(response.text)
 
     raise ValueError(f"Unsupported content type: {content_type}")

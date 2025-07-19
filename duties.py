@@ -102,7 +102,10 @@ def check_api(ctx: Context, *cli_args: str) -> None:
 
 @duty
 def docs(
-    ctx: Context, *cli_args: str, host: str = "127.0.0.1", port: int = 8000,
+    ctx: Context,
+    *cli_args: str,
+    host: str = "127.0.0.1",
+    port: int = 8000,
 ) -> None:
     """Serve the documentation (localhost:8000).
 
@@ -136,7 +139,10 @@ def format(ctx: Context) -> None:
     """Run formatting tools on the code."""
     ctx.run(
         tools.ruff.check(
-            *PY_SRC_LIST, config="config/ruff.toml", fix_only=True, exit_zero=True,
+            *PY_SRC_LIST,
+            config="config/ruff.toml",
+            fix_only=True,
+            exit_zero=True,
         ),
         title="Auto-fixing code",
     )

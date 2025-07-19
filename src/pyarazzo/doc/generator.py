@@ -1,6 +1,10 @@
 """Doc generation package."""
+
 import logging
 import os
+
+
+from openapi_pydantic import OpenAPI
 
 from pyarazzo.model.arazzo import (
     ArazzoSpecification,
@@ -14,9 +18,13 @@ from pyarazzo.model.arazzo import (
     SourceDescriptionObject,
     Step,
     Workflow,
+    SourceType,
 )
 
+from pyarazzo.model.openapi import Operation, OperationRegistry
+
 LOGGER = logging.getLogger(__name__)
+
 
 class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
     """Visitor that generates markdown files for workflows."""
@@ -25,10 +33,11 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
         """Constructor.
 
         Args:
-            output_dir (str): _description_
+            output_dir (str): output dir path
         """
         self.output_dir = output_dir
         self.content = ""
+        self.operation_registry = OperationRegistry()
         os.makedirs(output_dir, exist_ok=True)
 
     def plantumlify(self, name: str) -> str:
@@ -48,15 +57,20 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
         Args:
             spec (ArazzoSpec): _description_
         """
+
+        for source_description in spec.source_descriptions:
+            source_description.accept(self)
+
         for wf in spec.workflows:
             self.content = ""
-            self.visit_workflow(wf)
+            wf.accept(self)
 
     def visit_workflow(self, workflow: Workflow) -> None:
         """Generate markdown content for a workflow, including PlantUML diagram."""
         LOGGER.info(f"Generation of workflow: {workflow.workflow_id}")
         filename = os.path.join(
-            self.output_dir, f"{workflow.workflow_id.root.replace(' ', '_').lower()}.md",
+            self.output_dir,
+            f"{workflow.workflow_id.root.replace(' ', '_').lower()}.md",
         )
 
         # Start building the markdown content
@@ -64,27 +78,43 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
         self.content += f"{workflow.description}\n\n"
 
         # Add PlantUML diagram
-        self.content += "## Workflow Diagram\n\n"
+        self.content += f"## Workflow Diagram {workflow.workflow_id.root}\n\n"
         self.content += "```plantuml\n"
         self.content += "@startuml\n"
         self.content += "skinparam backgroundColor #EEEBDC\n"
         self.content += "skinparam handwritten true\n\n"
 
-        self.content += f'participant "{workflow.workflow_id}" as {self.plantumlify(workflow.workflow_id.root)}\n'
+        # extract all service participants for operations
+        participants = list()
 
-        # Adding steps to the diagram
-        for step in workflow.steps:
-            self.content += (
-                f'participant "{step.step_id}" as {self.plantumlify(step.step_id.root)}\n'
-            )
+     
+
+
+        self.content += f'participant "{workflow.workflow_id.root}" as {self.plantumlify(workflow.workflow_id.root)}\n'
+
+        # # Adding steps to the diagram
+        # for step in workflow.steps:
+        #     self.content += f'participant "{step.step_id.root}" as {self.plantumlify(step.step_id.root)}\n'
 
         if workflow.depends_on:
             for depending_wf in workflow.depends_on:
-                self.content += f"WF_{self.plantumlify(depending_wf)} --> {self.plantumlify(workflow.workflow_id.root)}\n"
+                self.content += (
+                    f"WF_{self.plantumlify(depending_wf)} --> {self.plantumlify(workflow.workflow_id.root)}\n"
+                )
 
         # Adding dependencies to the diagram        for step in workflow.steps:
         for step in workflow.steps:
-            self.content += f"{self.plantumlify(workflow.workflow_id.root)} --> {self.plantumlify(step.step_id.root)} : {step.description}\n"
+            step_description = step.description
+            #if step_description is None:
+
+            called_service = self.plantumlify(step.step_id.root)
+
+            if step.operation_id is not None:
+                operation:Operation = self.operation_registry.operations[step.operation_id]
+                called_service = self.plantumlify(operation.service_name)
+                step_description = f"{operation.method} {operation.path}"
+
+            self.content += f"{self.plantumlify(workflow.workflow_id.root)} --> {called_service} : {step_description}\n"
 
         self.content += "@enduml\n```\n\n"
 
@@ -100,7 +130,7 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
 
     def visit_step(self, step: Step) -> None:
         """Generate markdown content for a step."""
-        self.content = f"### {step.step_id}\n\n"
+        self.content += f"### {step.step_id}\n\n"
         self.content += f"**ID**: {step.step_id}\n\n"
         self.content += f"{step.description}\n\n"
 
@@ -110,51 +140,58 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
         #         content += f"- {dependency}\n"
         #     content += "\n"
 
-
-
-    def visit_info(self, instance: Info)-> None:
+    def visit_info(self, instance: Info) -> None:
         """Visit Info instance.
 
         Args:
             instance (Info): _description_
         """
 
-    def visit_source_decription(self, instance: SourceDescriptionObject)-> None:
+    def visit_source_decription(self, instance: SourceDescriptionObject) -> None:
         """Visit SourceDescriptionObject instance.
 
         Args:
             instance (Info): _description_
         """
+        if instance.type != SourceType.openapi: 
+            raise ValueError(f"not supported source type {instance.type} for source {instance.name} ")
+        
+        self.operation_registry.append(openapi_spec=instance.url)
 
-    def visit_criterion_expression_type(self, instance: CriterionExpressionTypeObject)-> None:
+
+        
+        
+
+
+    def visit_criterion_expression_type(self, instance: CriterionExpressionTypeObject) -> None:
         """Visit CriterionExpressionTypeObject instance.
 
         Args:
             instance (Info): _description_
         """
 
-    def visit_reusable(self, instance: ReusableObject)-> None:
+    def visit_reusable(self, instance: ReusableObject) -> None:
         """Visit ReusableObject instance.
 
         Args:
             instance (Info): _description_
         """
 
-    def visit_parameter(self, instance: ParameterObject)-> None:
+    def visit_parameter(self, instance: ParameterObject) -> None:
         """Visit ParameterObject instance.
 
         Args:
             instance (Info): _description_
         """
 
-    def visit_payload_replacement(self, instance: PayloadReplacementObject)-> None:
+    def visit_payload_replacement(self, instance: PayloadReplacementObject) -> None:
         """Visit PayloadReplacementObject instance.
 
         Args:
             instance (Info): _description_
         """
 
-    def visit_components(self, instance: ComponentsObject)-> None:
+    def visit_components(self, instance: ComponentsObject) -> None:
         """Visit ComponentsObject instance.
 
         Args:

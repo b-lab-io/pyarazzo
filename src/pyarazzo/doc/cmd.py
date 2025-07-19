@@ -7,7 +7,7 @@ from pyarazzo.model.arazzo import ArazzoSpecificationLoader
 
 
 @click.group()
-def doc()-> None:
+def doc() -> None:
     """Documentation related commands."""
 
 
@@ -21,9 +21,14 @@ def doc()-> None:
     help="Path to the Arazzo specification file",
 )
 @click.option(
-    "-o", "--output", "output_dir", type=click.Path(), default=".", help="Path ",
+    "-o",
+    "--output",
+    "output_dir",
+    type=click.Path(),
+    default=".",
+    help="Path ",
 )
-def generate(spec_path:str, output_dir:str)->None:
+def generate(spec_path: str, output_dir: str) -> None:
     """Generate documentation from Arazzo specification."""
     try:
         # Here you would add the logic to:

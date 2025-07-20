@@ -307,6 +307,10 @@ class StepId(RootModel):
         """Return a string representation of the WorkflowId."""
         return f"WorkflowId('{self.root}')"
 
+    def __hash__(self) -> int:
+        """Return the hash of the workflow ID."""
+        return hash(self.root)
+
     # String-like behavior
     def replace(self, old: str, new: str, count: SupportsIndex = -1) -> str:
         """Replace occurrences of a substring with another substring."""
@@ -383,6 +387,10 @@ class WorkflowId(RootModel):
     def __repr__(self) -> str:
         """Return a string representation of the WorkflowId."""
         return f"WorkflowId('{self.root}')"
+
+    def __hash__(self) -> int:
+        """Return the hash of the workflow ID."""
+        return hash(self.root)
 
     # String-like behavior
     def replace(self, old: str, new: str, count: SupportsIndex = -1) -> str:
@@ -627,11 +635,60 @@ class RuntimeExpression( RootModel):
     """A  runtime expression allows values to be defined based on information that will be available within the HTTP message in an actual API call, or within objects serialized from the Arazzo document such as workflows or steps."""
 
     root: Annotated[
-        str, Field(description="", pattern="^$\\$sourceDescriptions\\.([A-Za-z0-9_\\-]+)\\.([A-Za-z0-9_\\-]+)$"),
+        str,
+        Field(..., description="", pattern="^$\\$sourceDescriptions\\.([A-Za-z0-9_\\-]+)\\.([A-Za-z0-9_\\-]+)$"),
     ]
 
+
+
+    @classmethod
+    def validate(cls, value: Any) -> Any:
+        """Validate the workflow ID."""
+        if not isinstance(value, str):
+            raise TypeError("StepId must be a string")
+        if not value.isalnum() and not all(c in "_-" for c in value):
+            raise ValueError("StepId must match pattern [A-Za-z0-9_-]+")
+        return value
     def __str__(self) -> str:
         return self.root
+
+    def __hash__(self) -> int:
+        """Return the hash of the workflow ID."""
+        return hash(self.root)
+
+    def __repr__(self) -> str:
+        """Return a string representation of the WorkflowId."""
+        return f"WorkflowId('{self.root}')"
+
+    # String-like behavior
+    def replace(self, old: str, new: str, count: SupportsIndex = -1) -> str:
+        """Replace occurrences of a substring with another substring."""
+        return self.root.replace(old, new, count)
+
+    def upper(self) -> str:
+        """Return the workflow ID in uppercase."""
+        return self.root.upper()
+
+    def lower(self) -> str:
+        """Return the workflow ID in lowercase."""
+        return self.root.lower()
+
+    def __add__(self, other: str) -> str:
+        """Allow concatenation with a string."""
+        return self.root + other
+
+    def __radd__(self, other: str) -> str:
+        """Allow concatenation with a string."""
+        return other + self.root
+
+    def __eq__(self, other: object) -> bool:
+        """Check equality with another WorkflowId or string."""
+        if isinstance(other, StepId):
+            return self.root == other.root
+        if isinstance(other, str):
+            return self.root == other
+        return False
+
 
 
 class Workflow(ArazzoElement):

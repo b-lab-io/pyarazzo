@@ -210,6 +210,7 @@ def test(ctx: Context, *cli_args: str, match: str="") -> None:
     Parameters:
         match: A pytest expression to filter selected tests.
     """
+    # ruff: noqa: PT028
     py_version = f"{sys.version_info.major}{sys.version_info.minor}"
     os.environ["COVERAGE_FILE"] = f".coverage.{py_version}"
     ctx.run(

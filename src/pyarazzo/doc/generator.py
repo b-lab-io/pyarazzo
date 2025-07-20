@@ -3,9 +3,6 @@
 import logging
 import os
 
-
-from openapi_pydantic import OpenAPI
-
 from pyarazzo.model.arazzo import (
     ArazzoSpecification,
     ArazzoVisitor,
@@ -16,12 +13,11 @@ from pyarazzo.model.arazzo import (
     PayloadReplacementObject,
     ReusableObject,
     SourceDescriptionObject,
+    SourceType,
     Step,
     Workflow,
-    SourceType,
 )
-
-from pyarazzo.model.openapi import Operation, OperationRegistry
+from pyarazzo.model.openapi import ApiOperation, OperationRegistry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +33,7 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
         """
         self.output_dir = output_dir
         self.content = ""
-        self.operation_registry = OperationRegistry()
+        self.operation_registry = OperationRegistry(operations={})
         os.makedirs(output_dir, exist_ok=True)
 
     def plantumlify(self, name: str) -> str:
@@ -57,7 +53,6 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
         Args:
             spec (ArazzoSpec): _description_
         """
-
         for source_description in spec.source_descriptions:
             source_description.accept(self)
 
@@ -84,12 +79,6 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
         self.content += "skinparam backgroundColor #EEEBDC\n"
         self.content += "skinparam handwritten true\n\n"
 
-        # extract all service participants for operations
-        participants = list()
-
-     
-
-
         self.content += f'participant "{workflow.workflow_id.root}" as {self.plantumlify(workflow.workflow_id.root)}\n'
 
         # # Adding steps to the diagram
@@ -110,7 +99,7 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
             called_service = self.plantumlify(step.step_id.root)
 
             if step.operation_id is not None:
-                operation:Operation = self.operation_registry.operations[step.operation_id]
+                operation:ApiOperation = self.operation_registry.operations[step.operation_id]
                 called_service = self.plantumlify(operation.service_name)
                 step_description = f"{operation.method} {operation.path}"
 
@@ -153,14 +142,14 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
         Args:
             instance (Info): _description_
         """
-        if instance.type != SourceType.openapi: 
+        if instance.type != SourceType.openapi:
             raise ValueError(f"not supported source type {instance.type} for source {instance.name} ")
-        
+
         self.operation_registry.append(openapi_spec=instance.url)
 
 
-        
-        
+
+
 
 
     def visit_criterion_expression_type(self, instance: CriterionExpressionTypeObject) -> None:

@@ -12,7 +12,8 @@ from typing import Annotated, Any
 from pydantic import BaseModel, Field, RootModel
 
 #from pyarazzo.utils import load_spec
-import pyarazzo.utils as utils
+from pyarazzo import utils
+
 
 class ArazzoVisitor(ABC):
     """Abstract Arazzo Vistor class."""

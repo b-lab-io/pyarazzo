@@ -204,12 +204,14 @@ def coverage(ctx: Context) -> None:
 
 
 @duty
-def test(ctx: Context, *cli_args: str, match: str = "") -> None:
+def test(ctx: Context, *cli_args: str, match: str) -> None:
     """Run the test suite.
 
     Parameters:
         match: A pytest expression to filter selected tests.
     """
+    if match is None:
+        match = ""
     py_version = f"{sys.version_info.major}{sys.version_info.minor}"
     os.environ["COVERAGE_FILE"] = f".coverage.{py_version}"
     ctx.run(

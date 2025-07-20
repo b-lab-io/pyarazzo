@@ -2,7 +2,7 @@
 import json
 import re
 from enum import Enum
-from typing import Annotated
+from typing import Annotated, Any
 
 import httpx
 import jsonref
@@ -80,8 +80,9 @@ class OperationRegistry(BaseModel):
         {}, description="Dictionary of operations keyed by ID",
     )
 
+    @classmethod
     @field_validator("operations")
-    def check_unique_ids(self, v: dict[str, OpenAPI]) -> dict[str, OpenAPI]:
+    def check_unique_ids(cls:Any, v: dict[str, OpenAPI]) -> dict[str, OpenAPI]:
         """Ensure that all operation IDs are unique inside a workflow."""
         if len(v) != len(set(v.keys())):
             raise ValueError("Duplicate IDs found in operations")
@@ -138,10 +139,10 @@ class OpenApiLoader:
 
         operation.operation_id = operation_data.operationId
         operation.method = operation_method
-        parameters_merged:list[Parameter] = list
-        if getattr(path_item, "parameters", None):
+        parameters_merged: list[Any] = []
+        if path_item.parameters is not None:
             parameters_merged.extend(path_item.parameters)
-        if getattr(operation_data, "parameters", None):
+        if operation_data.parameters is not None:
             parameters_merged.extend(operation_data.parameters)
         operation.append_parameters(parameters_merged)
 

@@ -10,7 +10,7 @@ import click
 import pytest
 import yaml
 
-from pyarazzo import utils  # Replace "your_module" with the actual module name
+from pyarazzo import utils
 
 
 @pytest.fixture

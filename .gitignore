@@ -24,3 +24,4 @@ uv.lock
 .ruff_cache/
 __pycache__/
 .DS_Store
+out/

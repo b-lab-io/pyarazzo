@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Swagger Petstore - OpenAPI 3.0
+  title: PetStore
   description: Modifies the standard Petstore example to illustrate a workflow in which coupons are discovered and then used in an order.
   license:
     name: Apache 2.0

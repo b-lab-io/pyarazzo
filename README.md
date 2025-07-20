@@ -18,3 +18,19 @@ With [`uv`](https://docs.astral.sh/uv/):
 ```bash
 uv tool install pyarazzo
 ```
+
+## usage
+
+```bash
+pyarazzo doc generate -s ./examples/pet-coupons-example.yaml -o ./out
+```
+
+## Developement environment
+
+```bash
+make clean
+make setup 
+make vscode
+export VIRTUAL_ENV=.venv
+source $VIRTUAL_ENV/bin/activate
+```

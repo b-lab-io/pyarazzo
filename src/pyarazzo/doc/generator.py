@@ -15,7 +15,9 @@ from pyarazzo.model.arazzo import (
     SourceDescriptionObject,
     SourceType,
     Step,
+    StepId,
     Workflow,
+    WorkflowId,
 )
 from pyarazzo.model.openapi import ApiOperation, OperationRegistry
 
@@ -36,7 +38,7 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
         self.operation_registry = OperationRegistry(operations={})
         os.makedirs(output_dir, exist_ok=True)
 
-    def plantumlify(self, name: str) -> str:
+    def plantumlify(self, name: str | WorkflowId | StepId) -> str:
         """Convert a string into a plantuml string format. Removing spaces and hyphens replacing them with underscores.
 
         Args:
@@ -65,7 +67,7 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
         LOGGER.info(f"Generation of workflow: {workflow.workflow_id}")
         filename = os.path.join(
             self.output_dir,
-            f"{workflow.workflow_id.root.replace(' ', '_').lower()}.md",
+            f"{workflow.workflow_id.replace(' ', '_').lower()}.md",
         )
 
         # Start building the markdown content
@@ -73,22 +75,22 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
         self.content += f"{workflow.description}\n\n"
 
         # Add PlantUML diagram
-        self.content += f"## Workflow Diagram {workflow.workflow_id.root}\n\n"
+        self.content += f"## Workflow Diagram {workflow.workflow_id}\n\n"
         self.content += "```plantuml\n"
         self.content += "@startuml\n"
         self.content += "skinparam backgroundColor #EEEBDC\n"
-        self.content += "skinparam handwritten true\n\n"
+        self.content += "!option handwritten true\n\n"
 
-        self.content += f'participant "{workflow.workflow_id.root}" as {self.plantumlify(workflow.workflow_id.root)}\n'
+        self.content += f'participant "{workflow.workflow_id}" as {self.plantumlify(workflow.workflow_id)}\n'
 
         # # Adding steps to the diagram
         # for step in workflow.steps:
-        #     self.content += f'participant "{step.step_id.root}" as {self.plantumlify(step.step_id.root)}\n'
+        #     self.content += f'participant "{step.step_id}" as {self.plantumlify(step.step_id)}\n'
 
         if workflow.depends_on:
             for depending_wf in workflow.depends_on:
                 self.content += (
-                    f"WF_{self.plantumlify(depending_wf)} --> {self.plantumlify(workflow.workflow_id.root)}\n"
+                    f"WF_{self.plantumlify(depending_wf)} --> {self.plantumlify(workflow.workflow_id)}\n"
                 )
 
         # Adding dependencies to the diagram        for step in workflow.steps:
@@ -96,14 +98,20 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
             step_description = step.description
             #if step_description is None:
 
-            called_service = self.plantumlify(step.step_id.root)
+            called_service = self.plantumlify(step.step_id)
 
             if step.operation_id is not None:
                 operation:ApiOperation = self.operation_registry.operations[step.operation_id]
                 called_service = self.plantumlify(operation.service_name)
                 step_description = f"{operation.method} {operation.path}"
+                self.content += f"{self.plantumlify(workflow.workflow_id)} --> {called_service} : {step_description}\n"
 
-            self.content += f"{self.plantumlify(workflow.workflow_id.root)} --> {called_service} : {step_description}\n"
+            if step.workflow_id is not None:
+                self.content += "group " + step.workflow_id + "\n"
+                called_service = self.plantumlify(step.workflow_id)
+                step_description = f"Workflow: {step.workflow_id}"
+                self.content += f"{self.plantumlify(workflow.workflow_id)} --> {called_service} : {step_description}\n"
+                self.content +=  "end\n"
 
         self.content += "@enduml\n```\n\n"
 

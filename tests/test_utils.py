@@ -6,11 +6,12 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-import click
 import pytest
+import requests
 import yaml
 
 from pyarazzo import utils
+from pyarazzo.exceptions import LoadError, ValidationError
 
 
 @pytest.fixture
@@ -50,11 +51,11 @@ def test_load_spec_invalid_file_format() -> None:
     with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", dir=".") as tmp:
         tmp.write("Invalid content")
         tmp.flush()
-        with pytest.raises(click.exceptions.Abort):
+        with pytest.raises(LoadError):
             utils.load_spec(tmp.name)
 
 
-@patch("requests.get")
+@patch("pyarazzo.utils.requests.get")
 def test_load_from_url_valid_json(mock_get: Any) -> None:
     """Read the test method name."""
     mock_response = MagicMock()
@@ -65,7 +66,7 @@ def test_load_from_url_valid_json(mock_get: Any) -> None:
     assert spec == {"key": "value"}
 
 
-@patch("requests.get")
+@patch("pyarazzo.utils.requests.get")
 def test_load_from_url_valid_yaml(mock_get: Any) -> None:
     """Read the test method name."""
     mock_response = MagicMock()
@@ -76,13 +77,13 @@ def test_load_from_url_valid_yaml(mock_get: Any) -> None:
     assert spec == {"key": "value"}
 
 
-@patch("requests.get")
+@patch("pyarazzo.utils.requests.get")
 def test_load_from_url_unsupported_content_type(mock_get: Any) -> None:
     """Read the test method name."""
     mock_response = MagicMock()
     mock_response.headers = {"Content-Type": "text/plain"}
     mock_get.return_value = mock_response
-    with pytest.raises(ValueError):  # noqa: PT011
+    with pytest.raises(LoadError):
         utils.load_from_url("https://example.com/spec.txt")
 
 
@@ -103,7 +104,7 @@ def test_load_from_file_unsupported_extension() -> None:
     with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", dir=".") as tmp:
         tmp.write("Invalid content")
         tmp.flush()
-        with pytest.raises(ValueError):  # noqa: PT011
+        with pytest.raises(LoadError):
             utils.load_from_file(tmp.name)
 
 
@@ -113,7 +114,7 @@ def test_load_data_valid_local_file(valid_json_file: Any) -> None:
     assert spec == {"key": "value"}
 
 
-@patch("requests.get")
+@patch("pyarazzo.utils.requests.get")
 def test_load_data_valid_url(mock_get: Any) -> None:
     """Read the test method name."""
     mock_response = MagicMock()
@@ -134,23 +135,21 @@ def test_schema_validation_valid_spec() -> None:
 def test_schema_validation_invalid_spec() -> None:
     """Read the test method name."""
     spec = {"invalid_key": "value"}
-    with pytest.raises(click.ClickException):
+    with pytest.raises(ValidationError):
         utils.schema_validation(spec)
 
 
-@patch("requests.get")
+@patch("pyarazzo.utils.requests.get")
 def test_load_data_url_http_error(mock_get: Any) -> None:
     """Read the test method name."""
-    mock_response = MagicMock()
-    mock_response.raise_for_status.side_effect = Exception("HTTP Error")
-    mock_get.return_value = mock_response
-    with pytest.raises(click.Abort):
+    mock_get.side_effect = requests.RequestException("HTTP Error")
+    with pytest.raises(LoadError):
         utils.load_data("https://example.com/spec.json")
 
 
 def test_load_data_invalid_local_file() -> None:
     """Read the test method name."""
-    with pytest.raises(click.Abort):
+    with pytest.raises(LoadError):
         utils.load_data("non_existent_file.json")
 
 
@@ -158,5 +157,5 @@ def test_load_data_invalid_json(valid_json_file: Any) -> None:
     """Read the test method name."""
     with open(valid_json_file, "w") as f:
         f.write("Invalid JSON")
-    with pytest.raises(click.Abort):
+    with pytest.raises(LoadError):
         utils.load_data(valid_json_file)

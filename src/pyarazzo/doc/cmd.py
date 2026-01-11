@@ -1,8 +1,12 @@
-"""Documentation Commands."""
+"""Documentation Commands.
+
+This module provides CLI commands for generating documentation from Arazzo specifications.
+"""
 
 import click
 
 from pyarazzo.doc.generator import SimpleMarkdownGeneratorVisitor
+from pyarazzo.exceptions import ArazzoException, GenerationError
 from pyarazzo.model.arazzo import ArazzoSpecificationLoader
 
 
@@ -31,12 +35,13 @@ def doc() -> None:
 def generate(spec_path: str, output_dir: str) -> None:
     """Generate documentation from Arazzo specification."""
     try:
-        # Here you would add the logic to:
         specification = ArazzoSpecificationLoader.load(spec_path)
         visitor: SimpleMarkdownGeneratorVisitor = SimpleMarkdownGeneratorVisitor(output_dir)
         specification.accept(visitor)
-
-        click.echo(f"Generating documentation from {spec_path} under folder {output_dir} done")
-    except Exception as e:
-        click.echo(f"Error generating documentation: {e!s}", err=True)
-        raise click.Abort from e
+        click.echo(f"Documentation generated successfully from {spec_path} to {output_dir}")
+    except ArazzoException as error:
+        click.echo(f"Error: {error}", err=True)
+        raise click.Abort from error
+    except Exception as error:  # noqa: BLE001
+        click.echo(f"Unexpected error generating documentation: {error}", err=True)
+        raise click.Abort from GenerationError(f"Documentation generation failed: {error!s}")

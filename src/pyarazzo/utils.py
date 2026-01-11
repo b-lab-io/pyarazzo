@@ -1,14 +1,27 @@
-"""Utils module to manipulate specification."""
+"""Utils module to manipulate specifications.
+
+This module provides utilities for:
+- Loading specifications from local files or URLs
+- Validating specifications against the Arazzo JSON schema
+- Supporting both JSON and YAML formats
+"""
 
 import importlib.resources
 import json
 import logging
 from urllib.parse import urlparse
 
-import click
 import requests
 import yaml
 from jsonschema import ValidationError, validate
+
+from pyarazzo.config import (
+    CONTENT_TYPE_JSON,
+    CONTENT_TYPE_YAML,
+    HTTP_REQUEST_TIMEOUT,
+)
+from pyarazzo.exceptions import LoadError
+from pyarazzo.exceptions import ValidationError as ArazzoValidationError
 
 LOGGER = logging.getLogger(__name__)
 
@@ -24,13 +37,17 @@ def load_spec(path_or_url: str) -> dict:
         path_or_url (str): file path to the specification
 
     Raises:
-        click.ClickException: unsupported file format
+        ArazzoValidationError: when specification fails schema validation
 
     Returns:
         dict: specification as a dict
     """
     document = load_data(path_or_url)
-    validate(document, schema)
+    try:
+        validate(document, schema)
+    except ValidationError as e:
+        LOGGER.exception(f"Schema validation failed for {path_or_url}")
+        raise ArazzoValidationError(f"Invalid specification: {e.message}") from e
     return document
 
 
@@ -41,22 +58,30 @@ def load_from_url(url: str) -> dict:
         url (str): url to a file.
 
     Raises:
-        ValueError: unsupported file extension.
+        LoadError: when HTTP request fails or content type is unsupported.
 
     Returns:
         dict: Document as dict.
     """
-    # It's a URL, fetch and load data
-    response = requests.get(url, timeout=30)
-    response.raise_for_status()  # Raise an exception for HTTP errors
+    try:
+        response = requests.get(url, timeout=HTTP_REQUEST_TIMEOUT)
+        response.raise_for_status()
+    except requests.RequestException as e:
+        LOGGER.exception(f"HTTP request failed for {url}")
+        raise LoadError(f"Failed to load from URL {url}: {e!s}") from e
+
     content_type = response.headers.get("Content-Type", "")
-    if "application/json" in content_type or url.endswith(".json"):
-        return response.json()
+    try:
+        if CONTENT_TYPE_JSON in content_type or url.endswith(".json"):
+            return response.json()
 
-    if "application/yaml" in content_type or "text/yaml" in content_type or url.endswith((".yaml", ",yml")):
-        return yaml.safe_load(response.text)
+        if any(ct in content_type for ct in CONTENT_TYPE_YAML) or url.endswith((".yaml", ".yml")):
+            return yaml.safe_load(response.text)
 
-    raise ValueError(f"Unsupported content type: {content_type}")
+        raise LoadError(f"Unsupported content type: {content_type}")
+    except (json.JSONDecodeError, yaml.YAMLError) as e:
+        LOGGER.exception(f"Failed to parse response from {url}")
+        raise LoadError(f"Failed to parse content from {url}: {e!s}") from e
 
 
 def load_from_file(path: str) -> dict:
@@ -66,58 +91,59 @@ def load_from_file(path: str) -> dict:
         path (str): Path to a local file.
 
     Raises:
-        ValueError: unsupported file extension.
+        LoadError: when file cannot be read or content cannot be parsed.
 
     Returns:
         dict: Document as dict.
     """
-    # Assume it's a local file path and load data
-    if path.endswith(".json"):
-        with open(path) as file:
-            return json.load(file)
-    elif path.endswith((".yaml", ".yml")):
-        with open(path) as file:
-            return yaml.safe_load(file)
-    else:
-        raise ValueError(f"Unsupported file extension: {path}")
+    try:
+        if path.endswith(".json"):
+            with open(path) as file:
+                return json.load(file)
+        elif path.endswith((".yaml", ".yml")):
+            with open(path) as file:
+                return yaml.safe_load(file)
+        else:
+            raise LoadError(f"Unsupported file extension: {path}")
+    except FileNotFoundError as e:
+        LOGGER.exception(f"File not found: {path}")
+        raise LoadError(f"File not found: {path}") from e
+    except (json.JSONDecodeError, yaml.YAMLError) as e:
+        LOGGER.exception(f"Failed to parse file: {path}")
+        raise LoadError(f"Failed to parse file {path}: {e!s}") from e
 
 
 def load_data(path_or_url: str) -> dict:
     """Load data from a local path or a URL, supporting JSON and YAML formats.
 
-    :param path_or_url: Path to a local file or a URL to a resource.
-    :return: Data as a Python object (dict or list).
-    """
-    try:
-        # Check if it's a URL
-        result = urlparse(path_or_url)
-        if all([result.scheme, result.netloc]):
-            return load_from_url(path_or_url)
+    Args:
+        path_or_url (str): Path to a local file or a URL to a resource.
 
-        return load_from_file(path_or_url)
-    except requests.RequestException as e:
-        LOGGER.exception("HTTP Request error")
-        raise click.Abort from e
-    except FileNotFoundError as e:
-        LOGGER.exception(f"File not found: {path_or_url}")
-        raise click.Abort from e
-    except (json.JSONDecodeError, yaml.YAMLError) as e:
-        LOGGER.exception("Data decoding error")
-        raise click.Abort from e
-    except ValueError as e:
-        LOGGER.exception("Value error")
-        raise click.Abort from e
-    except Exception as e:
-        LOGGER.exception("Unecptected error")
-        raise click.Abort from e
+    Returns:
+        dict: Data as a Python object (dict or list).
+
+    Raises:
+        LoadError: when data cannot be loaded or parsed.
+    """
+    result = urlparse(path_or_url)
+    if all([result.scheme, result.netloc]):
+        return load_from_url(path_or_url)
+
+    return load_from_file(path_or_url)
 
 
 def schema_validation(spec: dict) -> None:
-    """Validate the specification against the Json Schema."""
+    """Validate the specification against the JSON Schema.
+
+    Args:
+        spec (dict): The specification to validate.
+
+    Raises:
+        ArazzoValidationError: when specification fails schema validation.
+    """
     try:
         validate(instance=spec, schema=schema)
-        click.echo("Specification file is valid.")
+        LOGGER.info("Specification is valid")
     except ValidationError as exc:
-        raise click.ClickException(
-            f"Unsupported file type for specification file: {spec}",
-        ) from exc
+        LOGGER.exception("Specification validation failed")
+        raise ArazzoValidationError(f"Invalid specification: {exc.message}") from exc

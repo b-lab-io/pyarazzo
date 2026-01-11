@@ -11,7 +11,7 @@ from typing import Annotated, Any, SupportsIndex
 
 from pydantic import BaseModel, Field, RootModel
 
-#from pyarazzo.utils import load_spec
+# from pyarazzo.utils import load_spec
 from pyarazzo import utils
 
 
@@ -59,7 +59,7 @@ class ArazzoVisitor(ABC):
         """
 
     @abstractmethod
-    def visit_source_decription(self, instance: SourceDescriptionObject) -> None:
+    def visit_source_description(self, instance: SourceDescriptionObject) -> None:
         """Visit SourceDescriptionObject instance.
 
         Args:
@@ -167,7 +167,7 @@ class SourceDescriptionObject(ArazzoElement):
 
     def accept(self, visitor: ArazzoVisitor) -> None:
         """Accept instance of Arazzo Visitor."""
-        return visitor.visit_source_decription(self)
+        return visitor.visit_source_description(self)
 
 
 class CriterionExpressionTypeObjectType(str, Enum):
@@ -631,15 +631,13 @@ class Step(ArazzoElement):
         return visitor.visit_step(self)
 
 
-class RuntimeExpression( RootModel):
+class RuntimeExpression(RootModel):
     """A  runtime expression allows values to be defined based on information that will be available within the HTTP message in an actual API call, or within objects serialized from the Arazzo document such as workflows or steps."""
 
     root: Annotated[
         str,
         Field(..., description="", pattern="^$\\$sourceDescriptions\\.([A-Za-z0-9_\\-]+)\\.([A-Za-z0-9_\\-]+)$"),
     ]
-
-
 
     @classmethod
     def validate(cls, value: Any) -> Any:
@@ -649,6 +647,7 @@ class RuntimeExpression( RootModel):
         if not value.isalnum() and not all(c in "_-" for c in value):
             raise ValueError("StepId must match pattern [A-Za-z0-9_-]+")
         return value
+
     def __str__(self) -> str:
         return self.root
 
@@ -688,7 +687,6 @@ class RuntimeExpression( RootModel):
         if isinstance(other, str):
             return self.root == other
         return False
-
 
 
 class Workflow(ArazzoElement):

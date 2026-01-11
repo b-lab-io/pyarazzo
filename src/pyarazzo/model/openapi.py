@@ -1,4 +1,5 @@
 """pydantic models for Open API."""
+
 import json
 import re
 from enum import Enum
@@ -15,6 +16,7 @@ from requests.exceptions import HTTPError
 
 class HttpMethod(str, Enum):
     """Enum for HTTP methods."""
+
     get = "get"
     post = "post"
     put = "put"
@@ -45,14 +47,16 @@ class ApiOperation(BaseModel):
 
     service_name: Annotated[
         str,
-        Field("not-set",
+        Field(
+            "not-set",
             description="",
         ),
     ]
 
     operation_id: Annotated[
         str,
-        Field("not-set",
+        Field(
+            "not-set",
             description="",
         ),
     ]
@@ -61,52 +65,56 @@ class ApiOperation(BaseModel):
     headers: dict = {}
     query_parameters: dict = {}
     parameters: dict = {}
-    body:  dict | None = None
+    body: dict | None = None
 
-    def append_parameters(self, parameters: list[Parameter])-> None:
+    def append_parameters(self, parameters: list[Parameter]) -> None:
         """Append parameters to the operation.
 
         This method will update the operation's parameters and headers.
         It will also update the headers if any parameter is of type 'header'.
         """
         for param in parameters:
-           if param is not None and  param.param_in == ParameterLocation.HEADER:
-                        self.headers.update(param)
+            if param is not None and param.param_in == ParameterLocation.HEADER:
+                self.headers.update(param)
+
 
 class OperationRegistry(BaseModel):
     """Registry for OpenAPI operations."""
 
     operations: dict[str, ApiOperation] = Field(
-        {}, description="Dictionary of operations keyed by ID",
+        {},
+        description="Dictionary of operations keyed by ID",
     )
 
     @classmethod
     @field_validator("operations")
-    def check_unique_ids(cls:Any, v: dict[str, OpenAPI]) -> dict[str, OpenAPI]:
+    def check_unique_ids(cls: Any, v: dict[str, OpenAPI]) -> dict[str, OpenAPI]:
         """Ensure that all operation IDs are unique inside a workflow."""
         if len(v) != len(set(v.keys())):
             raise ValueError("Duplicate IDs found in operations")
         return v
 
-    def append(self, openapi_spec:str)->None:
+    def append(self, openapi_spec: str) -> None:
         """Append operations from an OpenAPI specification to the registry."""
-        self.operations.update(OpenApiLoader.load(url= openapi_spec))
+        self.operations.update(OpenApiLoader.load(url=openapi_spec))
 
 
 class OpenApiLoader:
     """Loader for OpenAPI specifications."""
 
     @staticmethod
-    def _is_remote(url:str) -> bool:
+    def _is_remote(url: str) -> bool:
         """Check if the URL is a remote URL."""
         # Regular expression pattern for URL validation
         pattern = re.compile(
-        r"^(https?|ftp)://"  # http:// or https:// or ftp://
-        r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|"  # domain...
-        r"localhost|"  # localhost...
-        r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"  # ...or ip
-        r"(?::\d+)?"  # optional port
-        r"(?:/?|[/?]\S+)$", re.IGNORECASE)
+            r"^(https?|ftp)://"  # http:// or https:// or ftp://
+            r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|"  # domain...
+            r"localhost|"  # localhost...
+            r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"  # ...or ip
+            r"(?::\d+)?"  # optional port
+            r"(?:/?|[/?]\S+)$",
+            re.IGNORECASE,
+        )
 
         return re.match(pattern, url) is not None
 
@@ -130,9 +138,13 @@ class OpenApiLoader:
             "Unsupported file type. Only JSON and YAML files are supported.",
         )
 
-
     @staticmethod
-    def _process_operation(path_item:PathItem, operation_method:HttpMethod, operation_data:Operation, operation:ApiOperation)->None:
+    def _process_operation(
+        path_item: PathItem,
+        operation_method: HttpMethod,
+        operation_data: Operation,
+        operation: ApiOperation,
+    ) -> None:
         """Helper function to process an operation method."""
         if operation_data.operationId is None:
             raise ValueError("Operation ID is required but not provided in the OpenAPI specification.")
@@ -147,7 +159,7 @@ class OpenApiLoader:
         operation.append_parameters(parameters_merged)
 
     @staticmethod
-    def load(url: str) -> dict[str,ApiOperation]:
+    def load(url: str) -> dict[str, ApiOperation]:
         """Load OpenAPI specification from a URL or file and return operations."""
         operations = {}
         spec_dict = None
@@ -158,7 +170,7 @@ class OpenApiLoader:
             with open(url) as file:
                 if url.endswith(".json"):
                     spec_dict = json.load(file)
-                if url.endswith((".yaml",".yml")):
+                if url.endswith((".yaml", ".yml")):
                     spec_dict = yaml.safe_load(file)
 
         # resolve all $ref
@@ -170,13 +182,13 @@ class OpenApiLoader:
 
         for path_name, path_item in open_api_spec.paths.items():
             operation = ApiOperation(
-                service_name= open_api_spec.info.title,
+                service_name=open_api_spec.info.title,
                 operation_id="no-set",
                 method=None,
                 path=path_name,
                 headers={},
-                parameters = {},
-                body= None,
+                parameters={},
+                body=None,
             )
 
             method_handlers = {
@@ -187,9 +199,9 @@ class OpenApiLoader:
 
             for _, (http_method, operation_data) in method_handlers.items():
                 if operation_data is not None:
-                    OpenApiLoader._process_operation(path_item , http_method, operation_data, operation)
+                    OpenApiLoader._process_operation(path_item, http_method, operation_data, operation)
 
             # TODO : Guarantee that the operationId is not missing
-            operations[operation.operation_id]= operation
+            operations[operation.operation_id] = operation
 
         return operations

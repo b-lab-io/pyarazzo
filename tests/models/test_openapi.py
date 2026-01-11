@@ -1,4 +1,5 @@
 """Test for OpenAPI Loader functionality."""
+
 import pytest
 
 from pyarazzo.model.openapi import OpenApiLoader

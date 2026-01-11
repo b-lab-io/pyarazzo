@@ -1,14 +1,15 @@
 """Entry point module of the tool."""
+
 import logging
 import sys
 
 import click
 
 from pyarazzo.doc.cmd import doc
+from pyarazzo.exceptions import ArazzoException
 from pyarazzo.robot.cmd import robot
 
-LOGGER = logging.getLogger("pyarazzo")
-LOGGER.setLevel(logging.WARNING)
+LOGGER = logging.getLogger(__name__)
 
 __version__ = "v0.0.1"
 
@@ -71,11 +72,15 @@ def main() -> None:
         # click lib uses a exception to terminate the program
         # also in success case
         sys.exit(error.exit_code)
-    except click.ClickException as error:
-        LOGGER.exception("Click Exception")
-        LOGGER.debug(str(error))
+    except ArazzoException as error:
+        LOGGER.error(str(error))
+        click.echo(f"Error: {error}", err=True)
         sys.exit(-1)
-    except Exception as error:  # noqa: BLE001
-        LOGGER.critical(error)
-        LOGGER.debug(str(error))
+    except click.ClickException as error:
+        LOGGER.error(str(error))
+        click.echo(f"Click Error: {error}", err=True)
+        sys.exit(-1)
+    except Exception as error:
+        LOGGER.exception("Unexpected error")
+        click.echo(f"Unexpected error: {error}", err=True)
         sys.exit(-2)

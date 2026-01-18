@@ -6,7 +6,7 @@ This module provides CLI commands for generating documentation from Arazzo speci
 import click
 
 from pyarazzo.doc.generator import SimpleMarkdownGeneratorVisitor
-from pyarazzo.exceptions import ArazzoException, GenerationError
+from pyarazzo.exceptions import ArazzoError, GenerationError
 from pyarazzo.model.arazzo import ArazzoSpecificationLoader
 
 
@@ -39,7 +39,7 @@ def generate(spec_path: str, output_dir: str) -> None:
         visitor: SimpleMarkdownGeneratorVisitor = SimpleMarkdownGeneratorVisitor(output_dir)
         specification.accept(visitor)
         click.echo(f"Documentation generated successfully from {spec_path} to {output_dir}")
-    except ArazzoException as error:
+    except ArazzoError as error:
         click.echo(f"Error: {error}", err=True)
         raise click.Abort from error
     except Exception as error:  # noqa: BLE001

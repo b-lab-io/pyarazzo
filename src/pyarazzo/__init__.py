@@ -11,7 +11,7 @@ This package provides tools for:
 from __future__ import annotations
 
 from pyarazzo.exceptions import (
-    ArazzoException,
+    ArazzoError,
     GenerationError,
     LoadError,
     SpecificationError,
@@ -19,7 +19,7 @@ from pyarazzo.exceptions import (
 )
 
 __all__: list[str] = [
-    "ArazzoException",
+    "ArazzoError",
     "GenerationError",
     "LoadError",
     "SpecificationError",

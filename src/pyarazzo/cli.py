@@ -6,8 +6,7 @@ import sys
 import click
 
 from pyarazzo.doc.cmd import doc
-from pyarazzo.exceptions import ArazzoException
-from pyarazzo.robot.cmd import robot
+from pyarazzo.exceptions import ArazzoError
 
 LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +56,7 @@ def cli(verbose: int) -> None:
 
 # adding commands subgroups
 cli.add_command(doc)
-cli.add_command(robot)
+
 
 
 def main() -> None:
@@ -72,12 +71,12 @@ def main() -> None:
         # click lib uses a exception to terminate the program
         # also in success case
         sys.exit(error.exit_code)
-    except ArazzoException as error:
-        LOGGER.error(str(error))
+    except ArazzoError as error:
+        LOGGER.exception("An ArazzoError occurred")
         click.echo(f"Error: {error}", err=True)
         sys.exit(-1)
     except click.ClickException as error:
-        LOGGER.error(str(error))
+        LOGGER.exception("A Click exception occurred")
         click.echo(f"Click Error: {error}", err=True)
         sys.exit(-1)
     except Exception as error:

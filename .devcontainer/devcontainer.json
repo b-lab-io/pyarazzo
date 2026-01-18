@@ -15,7 +15,8 @@
 		"vscode": {
 			"extensions": [
 				"ms-python.debugpy",
-				"ms-python.python"
+				"ms-python.python",
+				"connethics.arazzo-vscode"
 			]
 		}
 	},

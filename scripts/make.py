@@ -190,6 +190,10 @@ def main() -> int:
             run("default", "duty", "check-api")
         elif cmd in {"check-quality", "check-docs", "check-types", "test"}:
             multirun("duty", cmd, *opts)
+        elif cmd == "build":
+            run("default", "duty", "build")
+        elif cmd == "publish":
+            run("default", "duty", "publish")
         else:
             run("default", "duty", cmd, *opts)
 

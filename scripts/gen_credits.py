@@ -3,24 +3,19 @@
 from __future__ import annotations
 
 import os
-import sys
+
+# YORE: EOL 3.10: Replace block with line 2.
+import tomllib
 from collections import defaultdict
 from collections.abc import Iterable
 from importlib.metadata import distributions
 from itertools import chain
 from pathlib import Path
 from textwrap import dedent
-from typing import Union
 
 from jinja2 import StrictUndefined
 from jinja2.sandbox import SandboxedEnvironment
 from packaging.requirements import Requirement
-
-# YORE: EOL 3.10: Replace block with line 2.
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
 
 project_dir = Path(os.getenv("MKDOCS_CONFIG_DIR", "."))
 with project_dir.joinpath("pyproject.toml").open("rb") as pyproject_file:
@@ -29,7 +24,7 @@ project = pyproject["project"]
 project_name = project["name"]
 devdeps = [dep for dep in pyproject["dependency-groups"]["dev"] if not dep.startswith("-e")]
 
-PackageMetadata = dict[str, Union[str, Iterable[str]]]
+PackageMetadata = dict[str, str | Iterable[str]]
 Metadata = dict[str, PackageMetadata]
 
 
@@ -75,7 +70,11 @@ def _get_metadata() -> Metadata:
 def _set_license(metadata: PackageMetadata) -> None:
     license_field = metadata.get("license-expression", metadata.get("license", ""))
     license_name = license_field if isinstance(license_field, str) else " + ".join(license_field)
-    check_classifiers = license_name in ("UNKNOWN", "Dual License", "") or license_name.count("\n")
+    check_classifiers = license_name in (
+        "UNKNOWN",
+        "Dual License",
+        "",
+    ) or license_name.count("\n")
     if check_classifiers:
         license_names = []
         for classifier in metadata["classifier"]:
@@ -131,8 +130,14 @@ def _render_credits() -> str:
 
     template_data = {
         "project_name": project_name,
-        "prod_dependencies": sorted(prod_dependencies.values(), key=lambda dep: str(dep["name"]).lower()),
-        "dev_dependencies": sorted(dev_dependencies.values(), key=lambda dep: str(dep["name"]).lower()),
+        "prod_dependencies": sorted(
+            prod_dependencies.values(),
+            key=lambda dep: str(dep["name"]).lower(),
+        ),
+        "dev_dependencies": sorted(
+            dev_dependencies.values(),
+            key=lambda dep: str(dep["name"]).lower(),
+        ),
         "more_credits": "",
     }
     template_text = dedent(

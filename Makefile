@@ -25,4 +25,4 @@ actions = \
 
 .PHONY: $(actions)
 $(actions):
-	@python scripts/make "$@"
+	@python3 scripts/make "$@"

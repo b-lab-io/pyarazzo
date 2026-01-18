@@ -8,7 +8,7 @@ description = "CLI to manipulate and build on top of the Arazzo Specification"
 authors = [{name = "Sebastien Andreo", email = "sebastien@b-lab.io"}]
 license = {text = "Apache-2.0"}
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.12"
 keywords = []
 dynamic = ["version"]
 classifiers = [
@@ -17,9 +17,6 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
@@ -28,7 +25,18 @@ classifiers = [
     "Topic :: Utilities",
     "Typing :: Typed",
 ]
-dependencies = []
+dependencies = [
+    "click>=8.1.8",
+    "duty>=1.4.3",
+    "httpx>=0.28.1",
+    "jsonref>=1.1.0",
+    "jsonschema>=4.23.0",
+    "openapi-pydantic>=0.5.1",
+    "pydantic>=2.10.4",
+    "pyyaml>=6.0.2",
+    "robotframework>=7.4.0",
+    "types-requests>=2.32.0.20250328",
+]
 
 [project.urls]
 Homepage = "https://b-lab-io.github.io/pyarazzo"
@@ -76,12 +84,11 @@ data = [
 dev = [
     # dev
     "editables>=0.5",
-
+    "pytest",
     # maintenance
     "build>=1.2",
     "git-changelog>=2.5",
     "twine>=5.1",
-
     # ci
     "duty>=1.4",
     "ruff>=0.4",
@@ -92,7 +99,6 @@ dev = [
     "mypy>=1.10",
     "types-markdown>=3.6",
     "types-pyyaml>=6.0",
-
     # docs
     "black>=24.4",
     "markdown-callouts>=0.4",
@@ -107,4 +113,11 @@ dev = [
     "mkdocstrings[python]>=0.25",
     # YORE: EOL 3.10: Remove line.
     "tomli>=2.0; python_version < '3.11'",
+    "datamodel-code-generator>=0.26.4",
 ]
+
+[tool.setuptools]
+packages = ["pyarazzo"]
+
+[tool.setuptools.package-data]
+pyarazzo = ["*.yaml"]

@@ -1,58 +1,84 @@
-"""Module that contains the command line application."""
+"""Entry point module of the tool."""
 
-# Why does this file exist, and why not put this in `__main__`?
-#
-# You might be tempted to import things from `__main__` later,
-# but that will cause problems: the code will get executed twice:
-#
-# - When you run `python -m pyarazzo` python will execute
-#   `__main__.py` as a script. That means there won't be any
-#   `pyarazzo.__main__` in `sys.modules`.
-# - When you import `__main__` it will get executed again (as a module) because
-#   there's no `pyarazzo.__main__` in `sys.modules`.
-
-from __future__ import annotations
-
-import argparse
+import logging
 import sys
-from typing import Any
 
-from pyarazzo import debug
+import click
+
+from pyarazzo.doc.cmd import doc
+from pyarazzo.exceptions import ArazzoError
+
+LOGGER = logging.getLogger(__name__)
+
+__version__ = "v0.0.1"
+
+name = "pyarazzo"
 
 
-class _DebugInfo(argparse.Action):
-    def __init__(self, nargs: int | str | None = 0, **kwargs: Any) -> None:
-        super().__init__(nargs=nargs, **kwargs)
+HELP_BLURB = (
+    "To see help text, you can run:\n"
+    "\n"
+    "  pyarazzo --help\n"
+    "  pyarazzo <command> --help\n"
+    "  pyarazzo <command> <subcommand> --help\n"
+)
 
-    def __call__(self, *args: Any, **kwargs: Any) -> None:  # noqa: ARG002
-        debug.print_debug_info()
-        sys.exit(0)
+# generated from https://texteditor.com/ascii-art/
+# pylint: disable=anomalous-backslash-in-string
+LOGO = (
+    "                       ___                              \n"
+    "    ____  __  __      /   |  _________ _________  ____  \n"
+    "   / __ \\/ / / /_____/ /| | / ___/ __ `/_  /_  / / __ \\ \n"
+    "  / /_/ / /_/ /_____/ ___ |/ /  / /_/ / / /_/ /_/ /_/ / \n"
+    " / .___/\\__, /     /_/  |_/_/   \\__,_/ /___/___/\\____/  \n"
+    "/_/    /____/                                             "
+)
+
+USAGE = "pyarazzo [verbose options] <command> <subcommand> [parameters]\n" + f"{HELP_BLURB}"
 
 
-def get_parser() -> argparse.ArgumentParser:
-    """Return the CLI argument parser.
+@click.group()
+@click.version_option(__version__)
+@click.option("-v", "--verbose", count=True)
+def cli(verbose: int) -> None:
+    """Cli group.
 
-    Returns:
-        An argparse parser.
+    Args:
+        verbose (int): verbose level
     """
-    parser = argparse.ArgumentParser(prog="pyarazzo")
-    parser.add_argument("-V", "--version", action="version", version=f"%(prog)s {debug.get_version()}")
-    parser.add_argument("--debug-info", action=_DebugInfo, help="Print debug information.")
-    return parser
+    if verbose == 1:
+        logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    elif verbose > 1:
+        logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+    else:
+        logging.basicConfig(stream=sys.stdout, level=logging.WARNING)
 
 
-def main(args: list[str] | None = None) -> int:
-    """Run the main program.
+# adding commands subgroups
+cli.add_command(doc)
 
-    This function is executed when you type `pyarazzo` or `python -m pyarazzo`.
 
-    Parameters:
-        args: Arguments passed from the command line.
-
-    Returns:
-        An exit code.
-    """
-    parser = get_parser()
-    opts = parser.parse_args(args=args)
-    print(opts)
-    return 0
+def main() -> None:
+    """Main function."""
+    try:
+        click.echo(LOGO)
+        ctx = cli.make_context("cli", sys.argv[1:])
+        with ctx:
+            result = cli.invoke(ctx)
+            sys.exit(result)
+    except click.exceptions.Exit as error:
+        # click lib uses a exception to terminate the program
+        # also in success case
+        sys.exit(error.exit_code)
+    except ArazzoError as error:
+        LOGGER.exception("An ArazzoError occurred")
+        click.echo(f"Error: {error}", err=True)
+        sys.exit(-1)
+    except click.ClickException as error:
+        LOGGER.exception("A Click exception occurred")
+        click.echo(f"Click Error: {error}", err=True)
+        sys.exit(-1)
+    except Exception as error:
+        LOGGER.exception("Unexpected error")
+        click.echo(f"Unexpected error: {error}", err=True)
+        sys.exit(-2)

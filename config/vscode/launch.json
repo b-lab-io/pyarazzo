@@ -7,6 +7,16 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
+            "justMyCode": false,
+            "args":["doc", "generate", "-s", "${workspaceFolder}/examples/pet-coupons-example.yaml"]
+        },
+
+         {
+            "name": "python Module ",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "-m pyarazzo",
+            "console": "integratedTerminal",
             "justMyCode": false
         },
         {
@@ -25,6 +35,7 @@
             "type": "debugpy",
             "request": "launch",
             "module": "pytest",
+            "console": "integratedTerminal",
             "justMyCode": false,
             "args": [
                 "-c=config/pytest.ini",

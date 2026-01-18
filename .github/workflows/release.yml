@@ -3,6 +3,8 @@ name: release
 on: push
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   release:
@@ -31,3 +33,5 @@ jobs:
         files: dist/*
     - name: Publish to PyPI
       run: uv publish --token "${{ secrets.PYPI_TOKEN }}"
+    - name: Deploy documentation
+      run: uv run duty docs-deploy

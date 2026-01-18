@@ -34,6 +34,7 @@ dependencies = [
     "openapi-pydantic>=0.5.1",
     "pydantic>=2.10.4",
     "pyyaml>=6.0.2",
+    "requests>=2.32.3",
     "robotframework>=7.4.0",
     "types-requests>=2.32.0.20250328",
 ]
@@ -41,11 +42,10 @@ dependencies = [
 [project.urls]
 Homepage = "https://b-lab-io.github.io/pyarazzo"
 Documentation = "https://b-lab-io.github.io/pyarazzo"
-Changelog = "https://b-lab-io.github.io/pyarazzo/changelog"
+Changelog = "https://github.com/b-lab-io/pyarazzo/blob/main/CHANGELOG.md"
 Repository = "https://github.com/b-lab-io/pyarazzo"
 Issues = "https://github.com/b-lab-io/pyarazzo/issues"
 Discussions = "https://github.com/b-lab-io/pyarazzo/discussions"
-Gitter = "https://gitter.im/b-lab-io/pyarazzo"
 Funding = "https://github.com/sponsors/sebastien-b-lab-io"
 
 [project.scripts]

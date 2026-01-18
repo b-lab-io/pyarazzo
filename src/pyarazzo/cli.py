@@ -2,7 +2,7 @@
 
 import logging
 import sys
-from importlib.metadata import version, PackageNotFoundError
+from importlib.metadata import PackageNotFoundError, version
 
 import click
 

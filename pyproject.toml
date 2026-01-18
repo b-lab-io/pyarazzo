@@ -26,13 +26,13 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "click>=8.1.8",
-    "duty>=1.4.3",
+    "click>=8.3.1",
+    "duty>=1.6.3",
     "httpx>=0.28.1",
     "jsonref>=1.1.0",
     "jsonschema>=4.23.0",
     "openapi-pydantic>=0.5.1",
-    "pydantic>=2.10.4",
+    "pydantic>=2.12.5",
     "pyyaml>=6.0.2",
     "requests>=2.32.3",
     "robotframework>=7.4.0",

@@ -4,6 +4,7 @@
 
 actions = \
 	allrun \
+	build \
 	changelog \
 	check \
 	check-api \
@@ -17,6 +18,7 @@ actions = \
 	format \
 	help \
 	multirun \
+	publish \
 	release \
 	run \
 	setup \

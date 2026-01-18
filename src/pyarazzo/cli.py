@@ -2,6 +2,7 @@
 
 import logging
 import sys
+from importlib.metadata import version, PackageNotFoundError
 
 import click
 
@@ -10,7 +11,10 @@ from pyarazzo.exceptions import ArazzoError
 
 LOGGER = logging.getLogger(__name__)
 
-__version__ = "v0.0.1"
+try:
+    __version__ = version("pyarazzo")
+except PackageNotFoundError:
+    __version__ = "0.0.0.dev0"
 
 name = "pyarazzo"
 

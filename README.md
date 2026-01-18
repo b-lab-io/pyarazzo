@@ -5,7 +5,9 @@
 [![pypi version](https://img.shields.io/pypi/v/pyarazzo.svg)](https://pypi.org/project/pyarazzo/)
 [![gitter](https://badges.gitter.im/join%20chat.svg)](https://app.gitter.im/#/room/#pyarazzo:gitter.im)
 
-CLI to manipulate and build on top of the Arazzo Specification
+CLI to transform Arazzo specification into some other formats:
+- Simple Markdown format combining plnat uml to
+- [planned] robot framework scritps to use robot as execution and execution engine 
 
 ## Installation
 

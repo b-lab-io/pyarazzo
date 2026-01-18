@@ -1,21 +1,21 @@
 """Custom exceptions for pyarazzo."""
 
 
-class ArazzoException(Exception):
+class ArazzoError(Exception):
     """Base exception for all pyarazzo errors."""
 
 
-class SpecificationError(ArazzoException):
+class SpecificationError(ArazzoError):
     """Raised when specification is invalid or malformed."""
 
 
-class LoadError(ArazzoException):
+class LoadError(ArazzoError):
     """Raised when specification cannot be loaded from source."""
 
 
-class ValidationError(ArazzoException):
+class ValidationError(ArazzoError):
     """Raised when specification fails schema validation."""
 
 
-class GenerationError(ArazzoException):
+class GenerationError(ArazzoError):
     """Raised when generation process fails."""

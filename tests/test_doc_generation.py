@@ -5,6 +5,8 @@ from __future__ import annotations
 import os
 import tempfile
 
+import pytest
+
 from pyarazzo.doc.generator import SimpleMarkdownGeneratorVisitor
 from pyarazzo.exceptions import LoadError
 from pyarazzo.utils import load_spec
@@ -20,11 +22,9 @@ def test_load_spec_from_file() -> None:
 
 def test_load_spec_invalid_path() -> None:
     """Test loading from non-existent file raises LoadError."""
-    try:
+    with pytest.raises(LoadError) as exc_info:
         load_spec("nonexistent/file.yaml")
-        assert False, "Should have raised LoadError"
-    except LoadError as e:
-        assert "not found" in str(e).lower()
+    assert "not found" in str(exc_info.value).lower()
 
 
 def test_load_spec_unsupported_format() -> None:
@@ -32,18 +32,16 @@ def test_load_spec_unsupported_format() -> None:
     with tempfile.NamedTemporaryFile(suffix=".txt") as f:
         f.write(b"invalid content")
         f.flush()
-        try:
+        with pytest.raises(LoadError) as exc_info:
             load_spec(f.name)
-            assert False, "Should have raised LoadError"
-        except LoadError as e:
-            assert "unsupported" in str(e).lower()
+        assert "unsupported" in str(exc_info.value).lower()
 
 
 def test_doc_generator_creates_output_dir() -> None:
     """Test that doc generator creates output directory."""
     with tempfile.TemporaryDirectory() as tmpdir:
         output_dir = os.path.join(tmpdir, "docs", "nested")
-        generator = SimpleMarkdownGeneratorVisitor(output_dir)
+        SimpleMarkdownGeneratorVisitor(output_dir)
         assert os.path.exists(output_dir)
 
 

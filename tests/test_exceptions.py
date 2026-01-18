@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from pyarazzo.exceptions import (
-    ArazzoException,
+    ArazzoError,
     GenerationError,
     LoadError,
     SpecificationError,
@@ -14,39 +14,38 @@ from pyarazzo.exceptions import (
 
 
 def test_base_exception() -> None:
-    """Test ArazzoException is raised and caught."""
-    with pytest.raises(ArazzoException):
-        raise ArazzoException("Test error")
+    """Test ArazzoError is raised and caught."""
+    with pytest.raises(ArazzoError):
+        raise ArazzoError("Test error")
 
 
 def test_specification_error_inheritance() -> None:
-    """Test SpecificationError inherits from ArazzoException."""
-    with pytest.raises(ArazzoException):
+    """Test SpecificationError inherits from ArazzoError."""
+    with pytest.raises(ArazzoError):
         raise SpecificationError("Invalid spec")
 
 
 def test_load_error_inheritance() -> None:
-    """Test LoadError inherits from ArazzoException."""
-    with pytest.raises(ArazzoException):
+    """Test LoadError inherits from ArazzoError."""
+    with pytest.raises(ArazzoError):
         raise LoadError("Failed to load")
 
 
 def test_validation_error_inheritance() -> None:
-    """Test ValidationError inherits from ArazzoException."""
-    with pytest.raises(ArazzoException):
+    """Test ValidationError inherits from ArazzoError."""
+    with pytest.raises(ArazzoError):
         raise ValidationError("Validation failed")
 
 
 def test_generation_error_inheritance() -> None:
-    """Test GenerationError inherits from ArazzoException."""
-    with pytest.raises(ArazzoException):
+    """Test GenerationError inherits from ArazzoError."""
+    with pytest.raises(ArazzoError):
         raise GenerationError("Generation failed")
 
 
 def test_exception_message_preservation() -> None:
     """Test exception messages are preserved."""
     msg = "Custom error message"
-    try:
+    with pytest.raises(LoadError) as exc_info:
         raise LoadError(msg)
-    except LoadError as e:
-        assert str(e) == msg
+    assert str(exc_info.value) == msg

@@ -1,6 +1,6 @@
-"""Documentation Commands.
+"""Robot Framework Commands.
 
-This module provides CLI commands for generating documentation from Arazzo specifications.
+This module provides CLI commands for generating Robot Framework test scripts from Arazzo specifications.
 """
 
 import logging
@@ -9,19 +9,19 @@ from typing import Optional
 
 import click
 
-from pyarazzo.doc.generator import SimpleMarkdownGeneratorVisitor
 from pyarazzo.exceptions import ArazzoError, GenerationError
 from pyarazzo.model.arazzo import ArazzoSpecificationLoader
+from pyarazzo.robot.generator import RobotFrameworkGeneratorVisitor
 
 LOGGER = logging.getLogger(__name__)
 
 
 @click.group()
-def doc() -> None:
-    """Documentation related commands."""
+def robot() -> None:
+    """Robot Framework related commands."""
 
 
-@doc.command()
+@robot.command()
 @click.option(
     "-s",
     "--spec",
@@ -36,25 +36,23 @@ def doc() -> None:
     "output_dir",
     type=click.Path(),
     default=".",
-    help="Path ",
+    help="Output directory for generated Robot Framework files",
 )
 def generate(spec_path: str, output_dir: str) -> None:
-    """Generate documentation from Arazzo specification."""
+    """Generate Robot Framework test scripts from Arazzo specification."""
     correlation_id = str(uuid.uuid4())
     try:
-        LOGGER.info(f"[{correlation_id}] Starting documentation generation from {spec_path}")
+        LOGGER.info(f"[{correlation_id}] Starting Robot Framework generation from {spec_path}")
         specification = ArazzoSpecificationLoader.load(spec_path)
-        visitor: SimpleMarkdownGeneratorVisitor = SimpleMarkdownGeneratorVisitor(
-            output_dir, correlation_id=correlation_id
-        )
+        visitor = RobotFrameworkGeneratorVisitor(output_dir, correlation_id=correlation_id)
         specification.accept(visitor)
-        LOGGER.info(f"[{correlation_id}] Documentation generated successfully")
-        click.echo(f"Documentation generated successfully from {spec_path} to {output_dir}")
+        LOGGER.info(f"[{correlation_id}] Robot Framework tests generated successfully")
+        click.echo(f"Robot Framework tests generated successfully to {output_dir}")
     except ArazzoError as error:
         LOGGER.error(f"[{correlation_id}] ArazzoError: {error}")
         click.echo(f"Error: {error}", err=True)
         raise click.Abort from error
     except Exception as error:  # noqa: BLE001
         LOGGER.error(f"[{correlation_id}] Unexpected error: {error}")
-        click.echo(f"Unexpected error generating documentation: {error}", err=True)
-        raise click.Abort from GenerationError(f"Documentation generation failed: {error!s}")
+        click.echo(f"Unexpected error generating Robot Framework: {error}", err=True)
+        raise click.Abort from GenerationError(f"Robot Framework generation failed: {error!s}")

@@ -16,86 +16,91 @@ from pyarazzo import utils
 
 
 class ArazzoVisitor(ABC):
-    """Abstract Arazzo Vistor class."""
+    """Abstract Arazzo Visitor class implementing the visitor pattern.
+    
+    This interface defines methods for visiting different types of Arazzo specification elements.
+    Implementations of this interface can perform various operations (e.g., document generation,
+    validation, transformation) on Arazzo specifications by traversing their structure.
+    """
 
     @abstractmethod
     def visit_specification(self, instance: ArazzoSpecification) -> None:
-        """Visit ArazzoSpecification instance.
+        """Visit an Arazzo specification.
 
         Args:
-            instance (ArazzoSpecification): _description_
+            instance (ArazzoSpecification): The Arazzo specification to visit.
         """
 
     @abstractmethod
     def visit_workflow(self, instance: Workflow) -> None:
-        """Visit Workflow instance.
+        """Visit a workflow definition.
 
         Args:
-            instance (Workflow): _description_
+            instance (Workflow): The workflow to visit.
         """
 
     @abstractmethod
     def visit_step(self, instance: Step) -> None:
-        """Visit Step instance.
+        """Visit a step within a workflow.
 
         Args:
-            instance (Step): _description_
+            instance (Step): The step to visit.
         """
 
     @abstractmethod
     def visit_components(self, instance: ComponentsObject) -> None:
-        """Visit ComponentsObject instance.
+        """Visit a components object containing reusable definitions.
 
         Args:
-            instance (ComponentsObject): _description_
+            instance (ComponentsObject): The components object to visit.
         """
 
     @abstractmethod
     def visit_info(self, instance: Info) -> None:
-        """Visit Info instance.
+        """Visit metadata information about the Arazzo description.
 
         Args:
-            instance (Info): _description_
+            instance (Info): The info object containing metadata to visit.
         """
 
     @abstractmethod
     def visit_source_description(self, instance: SourceDescriptionObject) -> None:
-        """Visit SourceDescriptionObject instance.
+        """Visit a source description (e.g., OpenAPI specification reference).
 
         Args:
-            instance (SourceDescriptionObject): _description_
+            instance (SourceDescriptionObject): The source description to visit.
         """
 
     @abstractmethod
     def visit_criterion_expression_type(self, instance: CriterionExpressionTypeObject) -> None:
-        """Visit CriterionExpressionTypeObject instance.
+        """Visit a criterion expression used for conditional logic.
 
         Args:
-            instance (CriterionExpressionTypeObject): _description_
+            instance (CriterionExpressionTypeObject): The criterion expression to visit.
         """
 
     @abstractmethod
     def visit_reusable(self, instance: ReusableObject) -> None:
-        """Visit ReusableObject instance.
+        """Visit a reusable object component.
 
         Args:
-            instance (ReusableObject): _description_
+            instance (ReusableObject): The reusable object to visit.
         """
 
     @abstractmethod
     def visit_parameter(self, instance: ParameterObject) -> None:
-        """Visit ParameterObject instance.
+        """Visit a parameter definition.
 
         Args:
-            instance (ParameterObject): _description_
+            instance (ParameterObject): The parameter object to visit.
         """
 
     @abstractmethod
     def visit_payload_replacement(self, instance: PayloadReplacementObject) -> None:
-        """Visit PayloadReplacementObject instance.
+        """Visit a payload replacement operation.
 
         Args:
-            instance (PayloadReplacementObject): _description_
+            instance (PayloadReplacementObject): The payload replacement to visit.
         """
 
 

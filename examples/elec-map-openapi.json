@@ -1,0 +1,1857 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "contact": {
+      "email": "sebastien.andreo@siemens.com"
+    },
+    "title": "electricitymap-proxy",
+    "description": "TODO",
+    "version": "0.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://localhost:8000"
+    }
+  ],
+  "tags": [
+    {
+      "name": "service-state"
+    },
+    {
+      "name": "data-retrieval"
+    }
+  ],
+  "security": [
+    {
+      "BearerAuth": [
+        "ews.service-state.read"
+      ]
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "description": "Check the health of the service",
+        "operationId": "getHealth",
+        "tags": [
+          "service-state"
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "The service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/serviceHealth"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          }
+        }
+      }
+    },
+    "/readiness": {
+      "get": {
+        "description": "Check the readiness of the service",
+        "operationId": "getReadiness",
+        "tags": [
+          "service-state"
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "The service is ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/serviceReadiness"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          }
+        }
+      }
+    },
+    "/info": {
+      "get": {
+        "description": "Get information about the service",
+        "operationId": "getServiceInfo",
+        "tags": [
+          "service-state"
+        ],
+        "security": [
+          {
+            "BearerAuth": [
+              "ews.service-state.read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Information about the service",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/serviceInfo"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          }
+        }
+      }
+    },
+    "/loglevel": {
+      "parameters": [],
+      "patch": {
+        "description": "Update log level of given namespace",
+        "operationId": "updateLogLevel",
+        "tags": [
+          "service-state"
+        ],
+        "security": [
+          {
+            "BearerAuth": [
+              "ews.service-state.write"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/content-type"
+          }
+        ],
+        "requestBody": {
+          "description": "Body of the request to update the log level",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/logLevelRulesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Log update status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          }
+        }
+      }
+    },
+    "/locations/{locationId}/datasources": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/locationId"
+        },
+        {
+          "$ref": "#/components/parameters/x-correlation-id"
+        }
+      ],
+      "post": {
+        "description": "Creates a new datasource",
+        "operationId": "createDataSource",
+        "requestBody": {
+          "description": "Body of the Post request",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/dataSourceCreationRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": [
+              "ews.datasource.electricitymap.connections.write"
+            ]
+          }
+        ],
+        "tags": [
+          "data-source"
+        ],
+        "responses": {
+          "201": {
+            "description": "datasource created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/dataSourceCreationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          }
+        }
+      },
+      "get": {
+        "description": "Get all data sources for the given location",
+        "operationId": "getAllDataSources",
+        "security": [
+          {
+            "BearerAuth": [
+              "ews.datasource.electricitymap.connections.read"
+            ]
+          }
+        ],
+        "tags": [
+          "data-source"
+        ],
+        "responses": {
+          "200": {
+            "description": "get all datasource",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/dataSourceCreationResponseList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          }
+        }
+      }
+    },
+    "/locations/{locationId}/datasources/{datasourceId}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/locationId"
+        },
+        {
+          "$ref": "#/components/parameters/dataSourceId"
+        },
+        {
+          "$ref": "#/components/parameters/x-correlation-id"
+        }
+      ],
+      "patch": {
+        "description": "Update the secret of an existing datasource",
+        "operationId": "updateDataSource",
+        "requestBody": {
+          "description": "information about the secret",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/dataSourceCreationRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": [
+              "ews.datasource.electricitymap.connections.write"
+            ]
+          }
+        ],
+        "tags": [
+          "data-source"
+        ],
+        "responses": {
+          "200": {
+            "description": "updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/dataSourceCreationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "422": {
+            "$ref": "#/components/responses/422"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          }
+        }
+      },
+      "get": {
+        "description": "Retrieve the secret of an existing datasource",
+        "operationId": "getDataSource",
+        "security": [
+          {
+            "BearerAuth": [
+              "ews.datasource.electricitymap.connections.read"
+            ]
+          }
+        ],
+        "tags": [
+          "data-source"
+        ],
+        "responses": {
+          "200": {
+            "description": "datasource found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/dataSourceCreationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "422": {
+            "$ref": "#/components/responses/422"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          }
+        }
+      },
+      "delete": {
+        "description": "delete datasource by Id",
+        "operationId": "deleteDataSourceById",
+        "security": [
+          {
+            "BearerAuth": [
+              "ews.datasource.electricitymap.connections.write"
+            ]
+          }
+        ],
+        "tags": [
+          "data-source"
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/204"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "422": {
+            "$ref": "#/components/responses/422"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          }
+        }
+      }
+    },
+    "/locations/{locationId}/datasources/{datasourceId}/things": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/locationId"
+        },
+        {
+          "$ref": "#/components/parameters/dataSourceId"
+        },
+        {
+          "$ref": "#/components/parameters/x-correlation-id"
+        },
+        {
+          "in": "query",
+          "name": "scope",
+          "schema": {
+            "type": "string",
+            "enum": [
+              "new",
+              "changed",
+              "deleted",
+              "unchanged",
+              "all"
+            ]
+          },
+          "description": "scope",
+          "required": false
+        }
+      ],
+      "post": {
+        "description": "Invoke calculation of available thing Descriptions",
+        "operationId": "invokeThingDescriptions",
+        "security": [
+          {
+            "BearerAuth": [
+              "ews.datasource.electricitymap.things.read"
+            ]
+          }
+        ],
+        "tags": [
+          "things"
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/thingDescriptionTaskAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          }
+        }
+      },
+      "get": {
+        "description": "Poll available thing Descriptions based on prior task invocation",
+        "operationId": "getThingDescriptions",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/task-id"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": [
+              "ews.datasource.electricitymap.things.read"
+            ]
+          }
+        ],
+        "tags": [
+          "things"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/thingDescriptionList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/404"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          }
+        }
+      }
+    },
+    "/locations/{locationId}/datasources/{datasourceId}/things/{thingDescriptionId}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/locationId"
+        },
+        {
+          "$ref": "#/components/parameters/dataSourceId"
+        },
+        {
+          "$ref": "#/components/parameters/thingDescriptionId"
+        },
+        {
+          "$ref": "#/components/parameters/x-correlation-id"
+        }
+      ],
+      "get": {
+        "description": "Poll thing Descriptions by Id based on prior task invocation",
+        "operationId": "getThingDescriptionById",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/task-id"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": [
+              "ews.datasource.electricitymap.things.read"
+            ]
+          }
+        ],
+        "tags": [
+          "things"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/thingDescription"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/404"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "425": {
+            "description": "Too early",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errors"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          }
+        }
+      }
+    },
+    "/history/{datasourceId}/carbon-intensity": {
+      "get": {
+        "description": "Get the last 24 hours of carbon intensity (in gCO2eq/kWh) of a datasource.",
+        "operationId": "getCarbonIntensityHistory",
+        "tags": [
+          "data-retrieval"
+        ],
+        "security": [
+          {
+            "BearerAuth": [
+              "ews.electricitymap.read",
+              "edex.electricitymap.read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/dataSourceId"
+          },
+          {
+            "$ref": "#/components/parameters/x-correlation-id"
+          },
+          {
+            "$ref": "#/components/parameters/emissionFactorType"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved carbon intensity data of last 24 hours",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/carbonIntensityHistoryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "errors": {
+        "type": "object",
+        "description": "TODO: replace with the energy-iot-schema reference after it is fixed",
+        "additionalProperties": false,
+        "properties": {
+          "errors": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 50,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "code": {
+                  "description": "error code, represents an extended error code identifier (potentially different from the HTTP Error Code)",
+                  "type": "integer",
+                  "example": 10404,
+                  "format": "int64",
+                  "minimum": 1000,
+                  "maximum": 99999
+                },
+                "status": {
+                  "description": "Numeric HTTP status code for the specific error 4xx or 5xx",
+                  "type": "integer",
+                  "example": 400,
+                  "format": "int64",
+                  "minimum": 400,
+                  "maximum": 599
+                },
+                "title": {
+                  "description": "intelligible error name",
+                  "example": "Plant not found",
+                  "type": "string",
+                  "pattern": "^[\\x00-\\x7F]{3,100}$",
+                  "maxLength": 100
+                },
+                "detail": {
+                  "description": "error message with context information",
+                  "example": "The plant with name 'greatest plant ' was not found ",
+                  "type": "string",
+                  "pattern": "^[\\s\\S]{0,500}$",
+                  "maxLength": 500
+                },
+                "source": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "description": "JSON Pointer",
+                      "additionalProperties": false,
+                      "properties": {
+                        "pointer": {
+                          "type": "string",
+                          "description": " a RFC6901 JSON Pointer to the value in the request document that caused the error [for example, '/data' for a primary data object, or '/data/attributes/title' for a specific attribute]. This MUST point to a value in the request document that exists; if it doesn’t, the client SHOULD simply ignore the pointer.",
+                          "format": "uri-reference",
+                          "maxLength": 250
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "description": "query parameter",
+                      "additionalProperties": false,
+                      "properties": {
+                        "parameter": {
+                          "type": "string",
+                          "description": "a string that indicates which URI query parameter caused the error.",
+                          "pattern": "^[\\x00-\\x7F]{0,500}$",
+                          "maxLength": 500
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "description": "header",
+                      "additionalProperties": false,
+                      "properties": {
+                        "header": {
+                          "type": "string",
+                          "description": "a string that indicates the name of a the header property which caused the error.",
+                          "pattern": "^[\\x00-\\x7F]{0,500}$",
+                          "maxLength": 500
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "description": "source",
+                      "additionalProperties": false,
+                      "properties": {
+                        "stack": {
+                          "type": "string",
+                          "description": "Full exception Stack with the error (Only for DEV)"
+                        },
+                        "path": {
+                          "type": "string",
+                          "description": "String that indicates which URI query parameter caused the error"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "links": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "about": {
+                      "description": "url to get more info about this error message ",
+                      "type": "string",
+                      "pattern": "^(https?://)?(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}(\\.[a-zA-Z0-9()]{1,6}\b|:[0-9]{1,5})([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)$",
+                      "maxLength": 8000
+                    }
+                  },
+                  "required": [
+                    "about"
+                  ]
+                }
+              },
+              "required": [
+                "code",
+                "status",
+                "title"
+              ]
+            }
+          }
+        }
+      },
+      "serviceHealth": {
+        "type": "object",
+        "description": "represents the data structure to answer to the /health enpoint ",
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "status",
+            "enum": [
+              "ok",
+              "not okay"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "description": "message",
+            "pattern": "^[\\x00-\\x7F]*$",
+            "maxLength": 140,
+            "default": "Service is running smoothly"
+          }
+        },
+        "required": [
+          "status",
+          "message"
+        ]
+      },
+      "serviceReadiness": {
+        "type": "object",
+        "description": "represents the data structure to answer to the /readiness enpoint ",
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "status",
+            "enum": [
+              "ok",
+              "not okay"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "pattern": "^[\\x00-\\x7F]*$",
+            "maxLength": 140,
+            "default": "Service is ready to accept requests"
+          },
+          "dependencies": {
+            "type": "array",
+            "description": "list of serviceDependency ",
+            "maxItems": 20,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "description": "status",
+                  "enum": [
+                    "ok",
+                    "not okay"
+                  ]
+                },
+                "name": {
+                  "type": "string",
+                  "pattern": "^[\\x00-\\x7F]*$",
+                  "description": "dependency name",
+                  "maxLength": 50,
+                  "example": "solace broker"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "status",
+          "message",
+          "dependencies"
+        ]
+      },
+      "serviceInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[\\x00-\\x7F]{3,50}$",
+            "maxLength": 50
+          },
+          "version": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "specification": {
+                "description": "specifies the version of the specification this implementation is implementing",
+                "example": "1.2",
+                "type": "string",
+                "pattern": "^[0-9]+\\.[0-9]+$",
+                "minLength": 3,
+                "maxLength": 7
+              },
+              "implementation": {
+                "description": "implementation version number",
+                "example": "1.2.569 or 1.2.570-pre.37942363.feat-mynewfeature",
+                "type": "string",
+                "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+                "minLength": 5,
+                "maxLength": 50
+              }
+            },
+            "required": [
+              "specification",
+              "implementation"
+            ]
+          },
+          "details": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "object",
+              "properties": {}
+            }
+          }
+        },
+        "required": [
+          "name",
+          "version",
+          "details"
+        ]
+      },
+      "logLevelRulesRequest": {
+        "type": "object",
+        "properties": {
+          "rules": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 50,
+            "items": {
+              "type": "object",
+              "properties": {
+                "pattern": {
+                  "type": "string",
+                  "default": "serviceName.folderName.fileName"
+                },
+                "level": {
+                  "type": "string",
+                  "enum": [
+                    "DEBUG",
+                    "INFO",
+                    "ERROR",
+                    "WARNING",
+                    "CRITICAL",
+                    "NOTSET"
+                  ],
+                  "default": "DEBUG"
+                }
+              },
+              "required": [
+                "level"
+              ]
+            }
+          }
+        },
+        "required": [
+          "rules"
+        ]
+      },
+      "datasourceId": {
+        "type": "string",
+        "maxLength": 36,
+        "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+      },
+      "dataSourceCreationRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": "object",
+            "$ref": "#/components/schemas/dataSourceModel"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "dataSourceCreationResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/datasourceId"
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "#/components/schemas/dataSourceModel"
+          },
+          "links": {
+            "type": "object",
+            "properties": {
+              "self": {
+                "type": "string",
+                "example": "https://mybaseurl.com/page1/page2?query1=val1&query2=val2#anchor"
+              }
+            }
+          }
+        }
+      },
+      "dataSourceCreationResponseList": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": "array",
+            "minItems": 0,
+            "maxItems": 20,
+            "items": {
+              "type": "object",
+              "$ref": "#/components/schemas/dataSourceCreationResponse"
+            }
+          }
+        }
+      },
+      "dataSourceModel": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "lat": {
+            "$ref": "#/components/schemas/latitude"
+          },
+          "lon": {
+            "$ref": "#/components/schemas/longitude"
+          },
+          "disableEstimations": {
+            "$ref": "#/components/schemas/disableEstimations"
+          },
+          "temporalGranularity": {
+            "$ref": "#/components/schemas/temporalGranularity"
+          }
+        },
+        "required": [
+          "lat",
+          "lon"
+        ]
+      },
+      "latitude": {
+        "type": "number",
+        "minimum": -90,
+        "maximum": 90,
+        "description": "The latitude in decimal degrees (-90 to 90)."
+      },
+      "longitude": {
+        "type": "number",
+        "minimum": -180,
+        "maximum": 180,
+        "description": "The longitude in decimal degrees (-180 to 180)."
+      },
+      "taskId": {
+        "type": "string",
+        "maxLength": 36,
+        "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+      },
+      "thingDescriptionId": {
+        "type": "string",
+        "description": "Identifier of the Thing in form of a URI [RFC3986] (e.g., stable URI, temporary and mutable URI, URI with local IP address, URN, etc.).",
+        "minLength": 1,
+        "pattern": "^[\\s\\S]{0,100}$",
+        "maxLength": 2000
+      },
+      "thingDescriptionList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/thingDescription"
+            },
+            "maxItems": 1000
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "thingDescription": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "td"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/thingDescriptionId"
+          },
+          "td": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "id",
+              "title",
+              "properties"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Identifier of the Thing in form of a URI [RFC3986] (e.g., stable URI, temporary and mutable URI, URI with local IP address, URN, etc.).",
+                "minLength": 1,
+                "pattern": "^[\\s\\S]{0,100}$",
+                "maxLength": 2000
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^[\\s\\S]{1,100}$",
+                "maxLength": 100
+              },
+              "description": {
+                "type": "string",
+                "minLength": 0,
+                "pattern": "^[\\s\\S]{0,500}$",
+                "maxLength": 500
+              },
+              "@type": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "minLength": 0,
+                    "pattern": "^[\\s\\S]{0,500}$",
+                    "maxLength": 500
+                  },
+                  {
+                    "type": "array",
+                    "minItems": 0,
+                    "items": {
+                      "type": "string",
+                      "minLength": 0,
+                      "pattern": "^[\\s\\S]{0,500}$",
+                      "maxLength": 500
+                    },
+                    "maxItems": 50
+                  }
+                ]
+              },
+              "properties": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "required": [
+                    "title"
+                  ],
+                  "properties": {
+                    "title": {
+                      "type": "string",
+                      "minLength": 1,
+                      "pattern": "^[\\s\\S]{1,100}$",
+                      "maxLength": 100
+                    },
+                    "titles": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^[a-z]{2}$": {
+                          "type": "string",
+                          "minLength": 1,
+                          "pattern": "^[\\s\\S]{1,100}$",
+                          "maxLength": 100
+                        }
+                      },
+                      "minProperties": 0,
+                      "additionalProperties": false
+                    },
+                    "descriptions": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^[a-z]{2}$": {
+                          "type": "string",
+                          "minLength": 0,
+                          "pattern": "^[\\s\\S]{0,500}$",
+                          "maxLength": 500
+                        }
+                      },
+                      "minProperties": 0,
+                      "additionalProperties": false
+                    },
+                    "@type": {
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "minLength": 0,
+                          "pattern": "^[\\s\\S]{0,500}$",
+                          "maxLength": 500
+                        },
+                        {
+                          "type": "array",
+                          "minItems": 0,
+                          "items": {
+                            "type": "string",
+                            "minLength": 0,
+                            "pattern": "^[\\s\\S]{0,500}$",
+                            "maxLength": 500
+                          },
+                          "maxItems": 50
+                        }
+                      ]
+                    },
+                    "description": {
+                      "type": "string",
+                      "minLength": 0,
+                      "pattern": "^[\\s\\S]{0,500}$",
+                      "maxLength": 500
+                    },
+                    "unit": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "description": "",
+                          "enum": [
+                            "n/a",
+                            "V",
+                            "kV",
+                            "A",
+                            "kA",
+                            "W",
+                            "kW",
+                            "MW",
+                            "Wh",
+                            "kWh",
+                            "MWh",
+                            "bar",
+                            "Pa",
+                            "kPa",
+                            "kW/m²",
+                            "m²",
+                            "m³",
+                            "nm³",
+                            "°C",
+                            "%",
+                            "kB",
+                            "kB/s",
+                            "MB",
+                            "MB/s"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "qudt-unit:USD-PER-FT3",
+                            "qudt-unit:PER-PERCENT",
+                            "qudt-unit:DEG",
+                            "qudt-unit:DEG_C",
+                            "qudt-unit:DEG_F",
+                            "qudt-unit:MicroGM-PER-L",
+                            "qudt-unit:MicroGM-PER-M3",
+                            "qudt-unit:MicroS-PER-CentiM",
+                            "qudt-unit:MicroW-HR",
+                            "qudt-unit:A",
+                            "qudt-unit:A-HR",
+                            "qudt-unit:BAR",
+                            "qudt-unit:BBL",
+                            "qudt-unit:BQ-PER-M3",
+                            "qudt-unit:BTU_IT",
+                            "qudt-unit:BTU_IT-PER-HR",
+                            "qudt-unit:BTU_IT-PER-LB",
+                            "qudt-unit:FT3",
+                            "qudt-unit:FT3-PER-MIN",
+                            "qudt-unit:CentiM",
+                            "qudt-unit:DeciB_A",
+                            "qudt-unit:DEG_C?delta",
+                            "qudt-unit:DEG_F?delta",
+                            "qudt-unit:FT",
+                            "qudt-unit:FT2",
+                            "qudt-unit:GM",
+                            "qudt-unit:GM-PER-KiloGM",
+                            "qudt-unit:GM-PER-L",
+                            "qudt-unit:GM-PER-M3",
+                            "qudt-unit:GAL_US",
+                            "qudt-unit:GAL_US-PER-MIN",
+                            "qudt-unit:GigaW",
+                            "qudt-unit:GigaW-HR",
+                            "qudt-unit:H",
+                            "qudt-unit:HZ",
+                            "qudt-unit:HP",
+                            "qudt-unit:HectoPA",
+                            "qudt-unit:GAL_IMP",
+                            "qudt-unit:IN_H2O",
+                            "qudt-unit:IN",
+                            "qudt-unit:K",
+                            "qudt-unit:KiloBTU_IT",
+                            "qudt-unit:KiloCAL",
+                            "qudt-unit:KiloGM",
+                            "qudt-unit:KiloGM-PER-M2",
+                            "qudt-unit:KiloM",
+                            "qudt-unit:KiloPA",
+                            "qudt-unit:KiloV-A",
+                            "qudt-unit:KiloW-HR",
+                            "qudt-unit:L",
+                            "qudt-unit:LUX",
+                            "qudt-unit:M",
+                            "qudt-unit:M2",
+                            "qudt-unit:M3",
+                            "qudt-unit:MilliGM-PER-L",
+                            "qudt-unit:MegaPA",
+                            "qudt-unit:MegaW",
+                            "qudt-unit:MegaW-HR",
+                            "qudt-unit:SCF",
+                            "qudt-unit:SCM",
+                            "qudt-unit:PA",
+                            "qudt-unit:PSI",
+                            "qudt-unit:TON_Metric",
+                            "qudt-unit:THERM_US",
+                            "qudt-unit:TON_SHORT",
+                            "qudt-unit:V",
+                            "qudt-unit:W",
+                            "qudt-unit:W-PER-M2",
+                            "qudt-unit:W-HR",
+                            "qudt-unit:YR"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "minLength": 0,
+                          "pattern": "^[\\s\\S]{0,500}$",
+                          "maxLength": 500
+                        }
+                      ]
+                    },
+                    "ext:property:validation": {
+                      "type": "object",
+                      "properties": {
+                        "minValue": {
+                          "oneOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "integer",
+                              "format": "int32",
+                              "minimum": -2147483648,
+                              "maximum": 2147483647
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "inf",
+                                "-inf"
+                              ]
+                            }
+                          ]
+                        },
+                        "maxValue": {
+                          "oneOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "integer",
+                              "format": "int32",
+                              "minimum": -2147483648,
+                              "maximum": 2147483647
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "inf",
+                                "-inf"
+                              ]
+                            }
+                          ]
+                        },
+                        "minGradientPerSecond": {
+                          "oneOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "integer",
+                              "format": "int32",
+                              "minimum": -2147483648,
+                              "maximum": 2147483647
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "inf",
+                                "-inf"
+                              ]
+                            }
+                          ]
+                        },
+                        "maxGradientPerSecond": {
+                          "oneOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "integer",
+                              "format": "int32",
+                              "minimum": -2147483648,
+                              "maximum": 2147483647
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "inf",
+                                "-inf"
+                              ]
+                            }
+                          ]
+                        },
+                        "minCutoffInSecond": {
+                          "oneOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "integer",
+                              "format": "int32",
+                              "minimum": -2147483648,
+                              "maximum": 2147483647
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "inf",
+                                "-inf"
+                              ]
+                            }
+                          ]
+                        },
+                        "maxCutoffInSecond": {
+                          "oneOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "integer",
+                              "format": "int32",
+                              "minimum": -2147483648,
+                              "maximum": 2147483647
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "inf",
+                                "-inf"
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "forms": {
+                      "type": "array",
+                      "minItems": 0,
+                      "maxItems": 50,
+                      "items": {
+                        "properties": {
+                          "href": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 2000
+                          },
+                          "base": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 500
+                          },
+                          "op": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 6,
+                              "maxLength": 50
+                            }
+                          }
+                        },
+                        "required": [
+                          "href",
+                          "op"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "links": {
+            "$ref": "#/components/schemas/httpLink"
+          }
+        }
+      },
+      "thingDescriptionState": {
+        "type": "string",
+        "enum": [
+          "new",
+          "changed",
+          "deleted",
+          "unchanged"
+        ]
+      },
+      "thingDescriptionTaskAccepted": {
+        "type": "object",
+        "properties": {
+          "taskId": {
+            "$ref": "#/components/schemas/taskId"
+          },
+          "links": {
+            "type": "object",
+            "properties": {
+              "self": {
+                "type": "string",
+                "example": "https://mybaseurl.com/page1/page2?query1=val1&query2=val2#anchor"
+              }
+            }
+          }
+        },
+        "required": [
+          "taskId",
+          "links"
+        ]
+      },
+      "httpLink": {
+        "type": "object",
+        "properties": {
+          "self": {
+            "type": "string",
+            "format": "uri-reference",
+            "description": "hyper text reference to the referenced Http resource ",
+            "maxLength": 2000,
+            "example": "https://mybaseurl.com/page1/page2?query1=val1&query2=val2#anchor",
+            "pattern": "^(https?:\\/\\/)?(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}(\\.[a-zA-Z0-9()]{1,6}\\b|:[0-9]{1,5})([-a-zA-Z0-9()@:%_\\+.~#?&\\/\\/=]*)$",
+            "minLength": 0,
+            "x-42c-format": "o:uri-reference"
+          }
+        }
+      },
+      "temporalGranularity": {
+        "type": "string",
+        "description": "temporalGranularity",
+        "default": "hourly",
+        "enum": [
+          "5_minutes",
+          "15_minutes",
+          "hourly",
+          "daily",
+          "weekly",
+          "monthly",
+          "quarterly",
+          "yearly"
+        ],
+        "minLength": 5,
+        "maxLength": 10
+      },
+      "disableEstimations": {
+        "type": "boolean",
+        "description": "A boolean indicating if estimated data should be disabled.",
+        "default": true
+      },
+      "datetime": {
+        "type": "string",
+        "description": "represents the date-time in UTC format",
+        "example": "2020-01-01T00:00:00.000Z",
+        "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]{1,3})?Z$",
+        "maxLength": 24
+      },
+      "emissionFactorType": {
+        "type": "string",
+        "description": "emissionFactorType",
+        "enum": [
+          "lifecycle",
+          "direct"
+        ]
+      },
+      "carbonIntensityHistoryResponse": {
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    "responses": {
+      "204": {
+        "description": "No content"
+      },
+      "400": {
+        "description": "Bad Request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/errors"
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/errors"
+            }
+          }
+        }
+      },
+      "403": {
+        "description": "Forbidden",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/errors"
+            }
+          }
+        }
+      },
+      "404": {
+        "description": "Not Found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/errors"
+            }
+          }
+        }
+      },
+      "409": {
+        "description": "Conflict",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/errors"
+            }
+          }
+        }
+      },
+      "422": {
+        "description": "Unprocessable Content",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/errors"
+            }
+          }
+        }
+      },
+      "429": {
+        "description": "Too many requests",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/errors"
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "Unexpected Error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/errors"
+            }
+          }
+        }
+      },
+      "503": {
+        "description": "Service is temporarily unavailable",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/errors"
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "x-user-token": {
+        "name": "x-user-token",
+        "in": "header",
+        "description": "Original Caller Identity Token, to be reused for a child call",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "maxLength": 256
+        }
+      },
+      "content-type": {
+        "name": "Content-Type",
+        "in": "header",
+        "description": "The Content-Type representation header is used to indicate the original media type of the resource ",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "maxLength": 100,
+          "default": "application/json"
+        }
+      },
+      "locationId": {
+        "name": "locationId",
+        "in": "path",
+        "required": true,
+        "description": "uniquely identify the location",
+        "schema": {
+          "type": "string",
+          "maxLength": 36,
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        }
+      },
+      "x-correlation-id": {
+        "name": "x-correlation-id",
+        "in": "header",
+        "required": false,
+        "description": "Identify to the call over several services",
+        "schema": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 36
+        }
+      },
+      "dataSourceId": {
+        "name": "datasourceId",
+        "in": "path",
+        "required": true,
+        "description": "uniquely identify the data source",
+        "schema": {
+          "$ref": "#/components/schemas/datasourceId"
+        }
+      },
+      "task-id": {
+        "name": "taskId",
+        "in": "query",
+        "required": true,
+        "description": "Identify prior invocation for result polling",
+        "schema": {
+          "$ref": "#/components/schemas/taskId"
+        }
+      },
+      "thingDescriptionId": {
+        "name": "thingDescriptionId",
+        "in": "path",
+        "required": true,
+        "description": "uniquely identify the thing description",
+        "schema": {
+          "$ref": "#/components/schemas/thingDescriptionId"
+        }
+      },
+      "emissionFactorType": {
+        "name": "emissionFactorType",
+        "in": "query",
+        "required": true,
+        "description": "Select the emission-factor-type.",
+        "schema": {
+          "$ref": "#/components/schemas/emissionFactorType"
+        }
+      }
+    }
+  }
+}

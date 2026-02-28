@@ -6,6 +6,8 @@ It includes markdown generation with PlantUML diagrams for workflow visualizatio
 
 import logging
 import os
+import uuid
+from typing import Optional
 
 from pyarazzo.config import PLANTUML_SETTINGS
 from pyarazzo.model.arazzo import (
@@ -32,14 +34,16 @@ LOGGER = logging.getLogger(__name__)
 class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
     """Visitor that generates markdown files for workflows."""
 
-    def __init__(self, output_dir: str) -> None:
+    def __init__(self, output_dir: str, correlation_id: Optional[str] = None) -> None:
         """Constructor.
 
         Args:
             output_dir (str): output dir path
+            correlation_id (Optional[str]): correlation ID for tracing
         """
         self.output_dir = output_dir
         self.content = ""
+        self.correlation_id = correlation_id or str(uuid.uuid4())
         self.operation_registry = OperationRegistry(operations={})
         os.makedirs(output_dir, exist_ok=True)
 
@@ -69,7 +73,7 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
 
     def visit_workflow(self, workflow: Workflow) -> None:
         """Generate markdown content for a workflow, including PlantUML diagram."""
-        LOGGER.info(f"Generating workflow documentation: {workflow.workflow_id}")
+        LOGGER.info(f"[{self.correlation_id}] Generating workflow documentation: {workflow.workflow_id}")
         filename = os.path.join(
             self.output_dir,
             f"{workflow.workflow_id.replace(' ', '_').lower()}.md",
@@ -120,7 +124,7 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
         with open(filename, "w") as f:
             f.write(self.content)
 
-        LOGGER.info(f"Generated: {filename}")
+        LOGGER.info(f"[{self.correlation_id}] Generated: {filename}")
 
     def visit_step(self, step: Step) -> None:
         """Generate markdown content for a step."""
@@ -135,17 +139,17 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
         #     content += "\n"
 
     def visit_info(self, instance: Info) -> None:
-        """Visit Info instance.
+        """Visit metadata information about the Arazzo description.
 
         Args:
-            instance (Info): _description_
+            instance (Info): The metadata information to visit.
         """
 
     def visit_source_description(self, instance: SourceDescriptionObject) -> None:
-        """Visit SourceDescriptionObject instance.
+        """Visit a source description (e.g., OpenAPI specification reference).
 
         Args:
-            instance (SourceDescriptionObject): _description_
+            instance (SourceDescriptionObject): The source description to visit.
         """
         if instance.type != SourceType.openapi:
             raise ValueError(f"not supported source type {instance.type} for source {instance.name} ")
@@ -153,36 +157,36 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
         self.operation_registry.append(openapi_spec=instance.url)
 
     def visit_criterion_expression_type(self, instance: CriterionExpressionTypeObject) -> None:
-        """Visit CriterionExpressionTypeObject instance.
+        """Visit a criterion expression used for conditional logic.
 
         Args:
-            instance (Info): _description_
+            instance (CriterionExpressionTypeObject): The criterion expression to visit.
         """
 
     def visit_reusable(self, instance: ReusableObject) -> None:
-        """Visit ReusableObject instance.
+        """Visit a reusable object component.
 
         Args:
-            instance (Info): _description_
+            instance (ReusableObject): The reusable object to visit.
         """
 
     def visit_parameter(self, instance: ParameterObject) -> None:
-        """Visit ParameterObject instance.
+        """Visit a parameter definition.
 
         Args:
-            instance (Info): _description_
+            instance (ParameterObject): The parameter object to visit.
         """
 
     def visit_payload_replacement(self, instance: PayloadReplacementObject) -> None:
-        """Visit PayloadReplacementObject instance.
+        """Visit a payload replacement operation.
 
         Args:
-            instance (Info): _description_
+            instance (PayloadReplacementObject): The payload replacement to visit.
         """
 
     def visit_components(self, instance: ComponentsObject) -> None:
-        """Visit ComponentsObject instance.
+        """Visit a components object containing reusable definitions.
 
         Args:
-            instance (Info): _description_
+            instance (ComponentsObject): The components object to visit.
         """

@@ -8,7 +8,7 @@ info:
     c) orders the pet while applying the coupons from step b.
 sourceDescriptions:
   - name: pet-coupons
-    url: ./examples/pet-coupons.openapi.yaml
+    url: ./pet-coupons.openapi.yaml
     type: openapi
 workflows:
   - workflowId: apply-coupon
@@ -35,10 +35,7 @@ workflows:
       - stepId: find-coupons
         description: Find a coupon available for the selected pet.
         operationId: getPetCoupons
-        parameters:
-          - name: pet_id
-            in: path
-            value: $steps.find-pet.outputs.my_pet_id
+       
         successCriteria:
           - condition: $statusCode == 200
         outputs:

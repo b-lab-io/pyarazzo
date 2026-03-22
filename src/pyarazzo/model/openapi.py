@@ -74,8 +74,19 @@ class ApiOperation(BaseModel):
         It will also update the headers if any parameter is of type 'header'.
         """
         for param in parameters:
-            if param is not None and param.param_in == ParameterLocation.HEADER:
-                self.headers.update(param)
+            if param is None:
+                continue
+            
+            # Store parameter by name for easy lookup
+            param_name = param.name
+            self.parameters[param_name] = param.param_in
+            
+            # Update headers dict with header parameters
+            if param.param_in == ParameterLocation.HEADER:
+                self.headers[param_name] = param
+            # Update query parameters dict
+            elif param.param_in == ParameterLocation.QUERY:
+                self.query_parameters[param_name] = param
 
 
 class OperationRegistry(BaseModel):

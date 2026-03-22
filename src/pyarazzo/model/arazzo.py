@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Annotated, Any, SupportsIndex
+from typing import Annotated, Any, Literal, SupportsIndex, Union
 
 from pydantic import BaseModel, Field, RootModel
 
@@ -180,15 +180,19 @@ class CriterionExpressionTypeObjectType(str, Enum):
 
     jsonpath = "jsonpath"
     xpath = "xpath"
+    jsonpointer = "jsonpointer"
 
 
 class CriterionExpressionTypeObjectVersion(str, Enum):
     """A short hand string representing the version of the expression type."""
 
-    JSONPATH = "draft-goessner-dispatch-jsonpath-00"
-    XPATH30 = "xpath-30"
-    XPATH20 = "xpath-20"
+    JSONPATH_DRAFT = "draft-goessner-dispatch-jsonpath-00"
+    JSONPATH_RFC = "rfc9535"
     XPATH10 = "xpath-10"
+    XPATH20 = "xpath-20"
+    XPATH30 = "xpath-30"
+    XPATH31 = "xpath-31"
+    JSONPOINTER = "rfc6901"
 
 
 class CriterionExpressionTypeObject(ArazzoElement):
@@ -246,7 +250,6 @@ class In(str, Enum):
     query = "query"
     header = "header"
     cookie = "cookie"
-    body = "body"
 
 
 class ParameterObject(ArazzoElement):
@@ -274,17 +277,57 @@ class PayloadReplacementObject(ArazzoElement):
         str,
         Field(
             ...,
-            description="A JSON Pointer or XPath Expression which MUST be resolved against the request body",
+            description="A JSONPath, JSON Pointer, or XPath Expression which MUST be resolved against the request body",
         ),
+    ]
+    target_selector_type: Annotated[
+        Any,
+        Field(None, description="The selector expression type to use (e.g., `jsonpath`, `xpath`, or `jsonpointer`)", alias="targetSelectorType"),
     ]
     value: Annotated[
         Any,
-        Field(..., description="The value list within the target location"),
+        Field(..., description="The value to set at the location defined by the target. May be a literal, a runtime expression string, or a selector object."),
     ]
 
     def accept(self, visitor: ArazzoVisitor) -> None:
         """Accept instance of Arazzo Visitor."""
         return visitor.visit_payload_replacement(self)
+
+
+class ExpressionTypeObject(BaseModel):
+    """An object used to describe the type and version of an expression used within a Criterion Object or Selector Object."""
+
+    type: Annotated[
+        Literal["jsonpath", "xpath", "jsonpointer"],
+        Field(..., description="The type of selector to use"),
+    ]
+    version: Annotated[
+        str,
+        Field(..., description="A short hand string representing the version of the expression type"),
+    ]
+
+
+class SelectorType(RootModel):
+    """A selector expression type that may be a simple string enum or an Expression Type Object for version-specific support."""
+
+    root: Annotated[Union[Literal["jsonpointer", "jsonpath", "xpath"], ExpressionTypeObject], Field(...)]
+
+
+class SelectorObject(BaseModel):
+    """An object which enables fine-grained traversal and precise data selection from structured data."""
+
+    context: Annotated[
+        str,
+        Field(..., description="A valid Runtime Expression which MUST evaluate to structured data (e.g., `$response.body`), and sets the context for the selector to be applied on"),
+    ]
+    selector: Annotated[
+        str,
+        Field(..., description="A selector expression (e.g., `$.items[0].id`, `/Envelope/Item`) in the form of JSONPath expression, XPath expression, or JSON Pointer expression"),
+    ]
+    type: Annotated[
+        Any,
+        Field(..., description="The selector expression type to use (e.g., `jsonpath`, `xpath`, or `jsonpointer`) or an Expression Type Object for older version support"),
+    ]
 
 
 class StepId(RootModel):
@@ -519,10 +562,10 @@ class FailureActionObject(BaseModel):
         Field(
             None,
             description="The workflowId referencing an existing workflow within the Arazzo description to transfer to upon failure of the step",
-            alias="WorkflowId",
+            alias="workflowId",
         ),
     ]
-    step_id: Annotated[StepId, Field(description="Unique string to represent the step", alias="stepId")]
+    step_id: Annotated[StepId, Field(None, description="The stepId to transfer to upon failure of the step", alias="stepId")]
     retry_after: Annotated[
         float | None,
         Field(
@@ -592,10 +635,11 @@ class Step(ArazzoElement):
         ),
     ]
     request_body: Annotated[
-        RequestBodyObject,
+        RequestBodyObject | None,
         Field(
-            [],
-            description="A list of parameters that MUST be passed to an operation or workflow as referenced by operationId, operationPath, or workflowId",
+            None,
+            description="The request body to pass to an operation as referenced by operationId or operationPath",
+            alias="requestBody",
         ),
     ]
     success_criteria: Annotated[
@@ -807,7 +851,7 @@ class ArazzoSpecification(ArazzoElement):
         Field(
             ...,
             description="The version number of the Arazzo Specification",
-            pattern=r"^1\.0\.\d+(-.+)?$",
+            pattern=r"^1\.1\.\d+(-.+)?$",
         ),
     ]
     info: Annotated[

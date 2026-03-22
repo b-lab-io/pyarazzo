@@ -10,4 +10,4 @@ def test_load_local_spec(path: str) -> None:
     """Test the trasnformation from yaml/json to an object model."""
     operations = OpenApiLoader.load(path)
     assert operations is not None
-    assert len(operations.items()) == 7
+    assert len(operations.items()) == 11

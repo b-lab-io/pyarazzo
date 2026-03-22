@@ -181,27 +181,28 @@ class OpenApiLoader:
         # just accumulate all parameters at the operation level
 
         for path_name, path_item in open_api_spec.paths.items():
-            operation = ApiOperation(
-                service_name=open_api_spec.info.title,
-                operation_id="no-set",
-                method=None,
-                path=path_name,
-                headers={},
-                parameters={},
-                body=None,
-            )
-
             method_handlers = {
                 "post": (HttpMethod.post, path_item.post),
                 "get": (HttpMethod.get, path_item.get),
                 "put": (HttpMethod.put, path_item.put),
+                "delete": (HttpMethod.delete, path_item.delete) if hasattr(path_item, 'delete') else None,
+                "patch": (HttpMethod.patch, path_item.patch) if hasattr(path_item, 'patch') else None,
             }
+            
+            method_handlers = {k: v for k, v in method_handlers.items() if v is not None}
 
             for _, (http_method, operation_data) in method_handlers.items():
                 if operation_data is not None:
+                    operation = ApiOperation(
+                        service_name=open_api_spec.info.title,
+                        operation_id="no-set",
+                        method=None,
+                        path=path_name,
+                        headers={},
+                        parameters={},
+                        body=None,
+                    )
                     OpenApiLoader._process_operation(path_item, http_method, operation_data, operation)
-
-            # TODO : Guarantee that the operationId is not missing
-            operations[operation.operation_id] = operation
+                    operations[operation.operation_id] = operation
 
         return operations

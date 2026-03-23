@@ -35,14 +35,12 @@ class ApiOperation(BaseModel):
         operationId (str): Unique identifier for the operation.
         method (Optional[HttpMethod]): HTTP method (e.g., GET, POST) for the operation.
         path (str): URL path for the operation.
-        headers (dict): Dictionary of HTTP headers associated with the operation.
-        parameters (dict): Dictionary of parameters for the operation.
+        parameters (dict): Dictionary of parameters by name with full Parameter objects
         body (Optional[dict]): Request body for the operation, if applicable.
 
     Methods:
         append_parameters(parameters: List[Union[Parameter, Reference]]):
-            Appends a list of parameters to the operation, updating both the parameters and headers.
-            If a parameter is of type 'header', it is added to the headers dictionary.
+            Appends a list of parameters to the operation.
     """
 
     service_name: Annotated[
@@ -62,31 +60,21 @@ class ApiOperation(BaseModel):
     ]
     method: HttpMethod | None = None
     path: str
-    headers: dict = {}
-    query_parameters: dict = {}
-    parameters: dict = {}
+    parameters: dict[str, Parameter] = {}
     body: dict | None = None
 
     def append_parameters(self, parameters: list[Parameter]) -> None:
         """Append parameters to the operation.
 
-        This method will update the operation's parameters and headers.
-        It will also update the headers if any parameter is of type 'header'.
+        Stores full Parameter objects with their metadata (required, type, etc.)
+        for validation against step definitions.
         """
         for param in parameters:
             if param is None:
                 continue
             
-            # Store parameter by name for easy lookup
-            param_name = param.name
-            self.parameters[param_name] = param.param_in
-            
-            # Update headers dict with header parameters
-            if param.param_in == ParameterLocation.HEADER:
-                self.headers[param_name] = param
-            # Update query parameters dict
-            elif param.param_in == ParameterLocation.QUERY:
-                self.query_parameters[param_name] = param
+            # Store full Parameter object by name
+            self.parameters[param.name] = param
 
 
 class OperationRegistry(BaseModel):

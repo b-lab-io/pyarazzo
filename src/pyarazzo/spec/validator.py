@@ -56,6 +56,7 @@ class WorkflowValidationVisitor(ArazzoVisitor):
         self.operation_registry = OperationRegistry(operations={})
         self.errors: list[str] = []
         self.warnings: list[str] = []
+        self.initialization_errors: list[str] = []
         self._load_operations()
 
     def _load_operations(self) -> None:
@@ -67,7 +68,7 @@ class WorkflowValidationVisitor(ArazzoVisitor):
                     url = self._resolve_source_url(source.url)
                     self.operation_registry.append(openapi_spec=url)
                 except Exception as e:
-                    self.errors.append(
+                    self.initialization_errors.append(
                         f"Failed to load OpenAPI spec '{source.url}' from source '{source.name}': {e}"
                     )
 
@@ -100,6 +101,9 @@ class WorkflowValidationVisitor(ArazzoVisitor):
         """
         self.errors = []
         self.warnings = []
+        
+        # Include initialization errors (e.g., failed to load OpenAPI specs)
+        self.errors.extend(self.initialization_errors)
         
         # Accept the specification with this visitor
         self.visit_specification(self.specification)
@@ -203,23 +207,56 @@ class WorkflowValidationVisitor(ArazzoVisitor):
     def _validate_step_parameters(
         self, step: Step, operation: ApiOperation, step_id: str
     ) -> None:
-        """Validate step parameters against operation definition.
+        """Validate step parameters against OpenAPI operation constraints.
+
+        Checks:
+        - Parameters are defined in the operation
+        - Required parameters are provided
+        - Parameter locations (header, query, path) match OpenAPI definition
 
         Args:
             step: The step to validate
             operation: The OpenAPI operation definition
             step_id: The step ID for error messages
         """
-        if not step.parameters:
-            return
+        # Collect step parameters by name
+        step_params = {}
+        if step.parameters:
+            for param in step.parameters:
+                if isinstance(param, ParameterObject):
+                    step_params[param.name] = param
         
-        for param in step.parameters:
-            if isinstance(param, ParameterObject):
-                # Check that parameter is defined in operation
-                if param.name not in operation.parameters:
-                    self.warnings.append(
-                        f"Step '{step_id}' parameter '{param.name}' not defined in operation '{operation.operation_id}'"
-                    )
+        # Check for required parameters from operation
+        required_params = {
+            name: param for name, param in operation.parameters.items() 
+            if param.required
+        }
+        
+        # Validate required parameters are provided
+        missing_required = set(required_params.keys()) - set(step_params.keys())
+        for param_name in missing_required:
+            param_def = required_params[param_name]
+            param_location = param_def.param_in.value if hasattr(param_def.param_in, 'value') else str(param_def.param_in)
+            self.errors.append(
+                f"Step '{step_id}' missing required {param_location} parameter '{param_name}'"
+            )
+        
+        # Validate provided parameters
+        for param_name, step_param in step_params.items():
+            if param_name not in operation.parameters:
+                self.warnings.append(
+                    f"Step '{step_id}' parameter '{param_name}' not defined in operation '{operation.operation_id}'"
+                )
+            else:
+                # Validate parameter location matches
+                op_param = operation.parameters[param_name]
+                if hasattr(step_param, 'in_'):
+                    # If step parameter has explicit location, validate it matches
+                    op_param_location = op_param.param_in.value if hasattr(op_param.param_in, 'value') else str(op_param.param_in)
+                    if step_param.in_ != op_param_location:
+                        self.warnings.append(
+                            f"Step '{step_id}' parameter '{param_name}' location '{step_param.in_}' doesn't match operation definition '{op_param_location}'"
+                        )
 
     def _validate_criterion(self, criterion: any, step_id: str) -> None:
         """Validate a success criterion.

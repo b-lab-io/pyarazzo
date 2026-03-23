@@ -5,7 +5,6 @@ This module provides CLI commands for generating Robot Framework test scripts fr
 
 import logging
 import uuid
-from typing import Optional
 
 import click
 

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Annotated, Any, Literal, SupportsIndex, Union
+from typing import Annotated, Any, Literal, SupportsIndex
 
 from pydantic import BaseModel, Field, RootModel
 
@@ -310,7 +310,7 @@ class ExpressionTypeObject(BaseModel):
 class SelectorType(RootModel):
     """A selector expression type that may be a simple string enum or an Expression Type Object for version-specific support."""
 
-    root: Annotated[Union[Literal["jsonpointer", "jsonpath", "xpath"], ExpressionTypeObject], Field(...)]
+    root: Annotated[Literal["jsonpointer", "jsonpath", "xpath"] | ExpressionTypeObject, Field(...)]
 
 
 class SelectorObject(BaseModel):

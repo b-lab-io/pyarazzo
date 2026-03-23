@@ -10,7 +10,6 @@ import importlib.resources
 import json
 import logging
 import uuid
-from typing import Optional
 from urllib.parse import urlparse
 
 import requests
@@ -32,7 +31,7 @@ with importlib.resources.files("pyarazzo").joinpath("schema.yaml").open("r") as 
     schema = yaml.safe_load(schema_file)
 
 
-def load_spec(path_or_url: str, correlation_id: Optional[str] = None) -> dict:
+def load_spec(path_or_url: str, correlation_id: str | None = None) -> dict:
     """Load a specification from file in the json or yaml format.
 
     Args:
@@ -55,7 +54,7 @@ def load_spec(path_or_url: str, correlation_id: Optional[str] = None) -> dict:
     return document
 
 
-def load_from_url(url: str, correlation_id: Optional[str] = None) -> dict:
+def load_from_url(url: str, correlation_id: str | None = None) -> dict:
     """Load data from an url supporting JSON and YAML formats.
 
     Args:
@@ -90,7 +89,7 @@ def load_from_url(url: str, correlation_id: Optional[str] = None) -> dict:
         raise LoadError(f"Failed to parse content from {url}: {e!s}") from e
 
 
-def load_from_file(path: str, correlation_id: Optional[str] = None) -> dict:
+def load_from_file(path: str, correlation_id: str | None = None) -> dict:
     """Load data from a local path supporting JSON and YAML formats.
 
     Args:
@@ -121,7 +120,7 @@ def load_from_file(path: str, correlation_id: Optional[str] = None) -> dict:
         raise LoadError(f"Failed to parse file {path}: {e!s}") from e
 
 
-def load_data(path_or_url: str, correlation_id: Optional[str] = None) -> dict:
+def load_data(path_or_url: str, correlation_id: str | None = None) -> dict:
     """Load data from a local path or a URL, supporting JSON and YAML formats.
 
     Args:
@@ -142,7 +141,7 @@ def load_data(path_or_url: str, correlation_id: Optional[str] = None) -> dict:
     return load_from_file(path_or_url, correlation_id=correlation_id)
 
 
-def schema_validation(spec: dict, correlation_id: Optional[str] = None) -> None:
+def schema_validation(spec: dict, correlation_id: str | None = None) -> None:
     """Validate the specification against the JSON Schema.
 
     Args:

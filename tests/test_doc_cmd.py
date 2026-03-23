@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import os
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from click.testing import CliRunner
@@ -46,7 +45,7 @@ def test_generate_command_with_absolute_path(temp_output_dir: str) -> None:
     """Test doc generation with absolute path output."""
     runner = CliRunner()
     spec_path = Path("tests/data/models/v1/pet-coupons-example.yaml").absolute()
-    
+
     with patch("pyarazzo.doc.generator.SimpleMarkdownGeneratorVisitor.visit_specification"):
         result = runner.invoke(generate, ["-s", str(spec_path), "-o", temp_output_dir])
         # Command execution succeeds (may fail on API loading but that's expected)

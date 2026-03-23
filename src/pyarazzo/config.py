@@ -44,7 +44,7 @@ class RobotFrameworkConfig(BaseModel):
                 "request": "RequestsLibrary.Request",
                 "assert": "Should Be True",
                 "sleep": "Sleep",
-            }
+            },
         ),
     ]
 
@@ -56,7 +56,7 @@ class ContentTypeConfig(BaseModel):
 
     json_type: Annotated[str, Field(alias="json")] = "application/json"
     yaml_types: Annotated[list[str], Field(alias="yaml")] = Field(
-        default_factory=lambda: ["application/yaml", "text/yaml"]
+        default_factory=lambda: ["application/yaml", "text/yaml"],
     )
 
 

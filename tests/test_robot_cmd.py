@@ -35,8 +35,8 @@ def test_generate_robot_command_missing_spec_file() -> None:
 def test_generate_robot_command_with_valid_spec(mock_load: object) -> None:
     """Test robot generation with valid specification."""
     mock_spec = type("MockSpec", (), {})()
-    mock_load.return_value = mock_spec  # type: ignore
-    
+    mock_load.return_value = mock_spec  # type: ignore[attr-defined]
+
     runner = CliRunner()
     with tempfile.TemporaryDirectory() as tmpdir:
         result = runner.invoke(generate, ["-s", "tests/data/models/v1/pet-coupons-example.yaml", "-o", tmpdir])

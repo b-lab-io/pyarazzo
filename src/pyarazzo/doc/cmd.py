@@ -5,7 +5,6 @@ This module provides CLI commands for generating documentation from Arazzo speci
 
 import logging
 import uuid
-from typing import Optional
 
 import click
 
@@ -45,7 +44,7 @@ def generate(spec_path: str, output_dir: str) -> None:
         LOGGER.info(f"[{correlation_id}] Starting documentation generation from {spec_path}")
         specification = ArazzoSpecificationLoader.load(spec_path)
         visitor: SimpleMarkdownGeneratorVisitor = SimpleMarkdownGeneratorVisitor(
-            output_dir, correlation_id=correlation_id
+            output_dir, correlation_id=correlation_id,
         )
         specification.accept(visitor)
         LOGGER.info(f"[{correlation_id}] Documentation generated successfully")

@@ -7,7 +7,6 @@ It includes markdown generation with PlantUML diagrams for workflow visualizatio
 import logging
 import os
 import uuid
-from typing import Optional
 
 from pyarazzo.config import PLANTUML_SETTINGS
 from pyarazzo.model.arazzo import (
@@ -34,7 +33,7 @@ LOGGER = logging.getLogger(__name__)
 class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
     """Visitor that generates markdown files for workflows."""
 
-    def __init__(self, output_dir: str, correlation_id: Optional[str] = None) -> None:
+    def __init__(self, output_dir: str, correlation_id: str | None = None) -> None:
         """Constructor.
 
         Args:

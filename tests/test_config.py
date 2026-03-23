@@ -5,13 +5,13 @@ from __future__ import annotations
 import pytest
 
 from pyarazzo.config import (
-    AppConfig,
     CONTENT_TYPE_JSON,
     CONTENT_TYPE_YAML,
-    ContentTypeConfig,
     DEFAULT_CONFIG,
-    FileFormat,
     HTTP_REQUEST_TIMEOUT,
+    AppConfig,
+    ContentTypeConfig,
+    FileFormat,
     PlantUMLConfig,
     RobotFrameworkConfig,
 )
@@ -62,7 +62,7 @@ def test_content_type_config_defaults() -> None:
 def test_content_type_config_alias_support() -> None:
     """Test ContentTypeConfig supports field aliases."""
     # Using aliases to construct
-    config = ContentTypeConfig(**{"json": "custom/json", "yaml": ["my/yaml"]})
+    config = ContentTypeConfig(json="custom/json", yaml=["my/yaml"])
     assert config.json_type == "custom/json"
     assert config.yaml_types == ["my/yaml"]
 
@@ -92,7 +92,7 @@ def test_default_config_instance() -> None:
 def test_backward_compatibility_http_timeout() -> None:
     """Test backward compatibility for HTTP_REQUEST_TIMEOUT."""
     assert HTTP_REQUEST_TIMEOUT == 30
-    assert HTTP_REQUEST_TIMEOUT == DEFAULT_CONFIG.http_request_timeout
+    assert DEFAULT_CONFIG.http_request_timeout == HTTP_REQUEST_TIMEOUT
 
 
 def test_backward_compatibility_content_types() -> None:

@@ -7,10 +7,8 @@ import tempfile
 from unittest.mock import MagicMock, patch
 
 import pytest
-import yaml
 
 from pyarazzo import utils
-from pyarazzo.exceptions import LoadError
 
 
 @pytest.fixture
@@ -36,7 +34,7 @@ def test_load_from_url_with_correlation_id(mock_get: object) -> None:
     mock_response.json.return_value = {"key": "value"}
     mock_response.headers = {"Content-Type": "application/json"}
     mock_get.return_value = mock_response  # type: ignore
-    
+
     correlation_id = "test-correlation-456"
     spec = utils.load_from_url("https://example.com/spec.json", correlation_id=correlation_id)
     assert spec == {"key": "value"}
@@ -54,7 +52,6 @@ def test_schema_validation_with_correlation_id() -> None:
     """Test schema_validation includes correlation_id in logging."""
     # This test is skipped because testing full schema validation is complex
     # Correlation ID functionality is verified in other tests that use simpler data
-    pass
 
 
 def test_correlation_id_propagation_through_load_data(valid_json_file: str) -> None:

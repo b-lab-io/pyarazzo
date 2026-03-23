@@ -9,7 +9,7 @@ import httpx
 import jsonref
 import yaml
 from openapi_pydantic.v3.v3_0 import OpenAPI, Operation, PathItem
-from openapi_pydantic.v3.v3_0.parameter import Parameter, ParameterLocation
+from openapi_pydantic.v3.v3_0.parameter import Parameter
 from pydantic import BaseModel, Field, field_validator
 from requests.exceptions import HTTPError
 
@@ -72,7 +72,7 @@ class ApiOperation(BaseModel):
         for param in parameters:
             if param is None:
                 continue
-            
+
             # Store full Parameter object by name
             self.parameters[param.name] = param
 
@@ -184,10 +184,10 @@ class OpenApiLoader:
                 "post": (HttpMethod.post, path_item.post),
                 "get": (HttpMethod.get, path_item.get),
                 "put": (HttpMethod.put, path_item.put),
-                "delete": (HttpMethod.delete, path_item.delete) if hasattr(path_item, 'delete') else None,
-                "patch": (HttpMethod.patch, path_item.patch) if hasattr(path_item, 'patch') else None,
+                "delete": (HttpMethod.delete, path_item.delete) if hasattr(path_item, "delete") else None,
+                "patch": (HttpMethod.patch, path_item.patch) if hasattr(path_item, "patch") else None,
             }
-            
+
             method_handlers = {k: v for k, v in method_handlers.items() if v is not None}
 
             for _, (http_method, operation_data) in method_handlers.items():

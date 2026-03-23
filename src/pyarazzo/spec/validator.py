@@ -4,8 +4,6 @@ import logging
 import os
 import re
 import uuid
-from pathlib import Path
-from typing import Optional
 
 from pyarazzo.model.arazzo import (
     ArazzoSpecification,
@@ -29,7 +27,6 @@ LOGGER = logging.getLogger(__name__)
 class ValidationError(Exception):
     """Raised when a validation error occurs."""
 
-    pass
 
 
 class WorkflowValidationVisitor(ArazzoVisitor):
@@ -38,9 +35,9 @@ class WorkflowValidationVisitor(ArazzoVisitor):
     def __init__(
         self,
         specification: ArazzoSpecification,
-        spec_path: Optional[str] = None,
-        workflow_id: Optional[str] = None,
-        correlation_id: Optional[str] = None,
+        spec_path: str | None = None,
+        workflow_id: str | None = None,
+        correlation_id: str | None = None,
     ) -> None:
         """Initialize the workflow validation visitor.
 
@@ -68,9 +65,9 @@ class WorkflowValidationVisitor(ArazzoVisitor):
                     # Resolve relative URLs based on spec file location
                     url = self._resolve_source_url(source.url)
                     self.operation_registry.append(openapi_spec=url)
-                except Exception as e:
+                except OSError as e:
                     self.initialization_errors.append(
-                        f"Failed to load OpenAPI spec '{source.url}' from source '{source.name}': {e}"
+                        f"Failed to load OpenAPI spec '{source.url}' from source '{source.name}': {e}",
                     )
 
     def _resolve_source_url(self, url: str) -> str:
@@ -85,13 +82,12 @@ class WorkflowValidationVisitor(ArazzoVisitor):
         # If URL is remote, return as-is
         if url.startswith(("http://", "https://", "ftp://")):
             return url
-        
+
         # If we have a spec path and the URL is relative, resolve it
         if self.spec_path and not os.path.isabs(url):
             spec_dir = os.path.dirname(os.path.abspath(self.spec_path))
-            resolved_path = os.path.normpath(os.path.join(spec_dir, url))
-            return resolved_path
-        
+            return os.path.normpath(os.path.join(spec_dir, url))
+
         return url
 
     def validate(self) -> tuple[bool, list[str], list[str]]:
@@ -102,13 +98,13 @@ class WorkflowValidationVisitor(ArazzoVisitor):
         """
         self.errors = []
         self.warnings = []
-        
+
         # Include initialization errors (e.g., failed to load OpenAPI specs)
         self.errors.extend(self.initialization_errors)
-        
+
         # Accept the specification with this visitor
         self.visit_specification(self.specification)
-        
+
         return len(self.errors) == 0, self.errors, self.warnings
 
     def visit_specification(self, spec: ArazzoSpecification) -> None:
@@ -118,12 +114,12 @@ class WorkflowValidationVisitor(ArazzoVisitor):
             spec: The Arazzo specification
         """
         LOGGER.info(f"[{self.correlation_id}] Validating specification: {spec.info.title}")
-        
+
         # Validate that required source descriptions exist
         if not spec.source_descriptions:
             self.errors.append("No source descriptions defined in specification")
             return
-        
+
         # Validate workflows
         workflows_to_validate = spec.workflows
         if self.workflow_id:
@@ -133,7 +129,7 @@ class WorkflowValidationVisitor(ArazzoVisitor):
             if not workflows_to_validate:
                 self.errors.append(f"Workflow '{self.workflow_id}' not found in specification")
                 return
-        
+
         for workflow in workflows_to_validate:
             workflow.accept(self)
 
@@ -144,22 +140,22 @@ class WorkflowValidationVisitor(ArazzoVisitor):
             workflow: The workflow to validate
         """
         LOGGER.info(
-            f"[{self.correlation_id}] Validating workflow: {workflow.workflow_id}"
+            f"[{self.correlation_id}] Validating workflow: {workflow.workflow_id}",
         )
-        
+
         # Validate workflow dependencies
         if workflow.depends_on:
             for dep_id in workflow.depends_on:
                 if not any(w.workflow_id == dep_id for w in self.specification.workflows):
                     self.errors.append(
-                        f"Workflow '{workflow.workflow_id}' depends on non-existent workflow '{dep_id}'"
+                        f"Workflow '{workflow.workflow_id}' depends on non-existent workflow '{dep_id}'",
                     )
-        
+
         # Validate steps
         if not workflow.steps:
             self.errors.append(f"Workflow '{workflow.workflow_id}' has no steps")
             return
-        
+
         for step in workflow.steps:
             step.accept(self)
 
@@ -170,43 +166,43 @@ class WorkflowValidationVisitor(ArazzoVisitor):
             step: The step to validate
         """
         step_id = str(step.step_id)
-        
+
         # Check that step has at least one of: operationId, operationPath, or workflowId
         has_operation_id = step.operation_id is not None
         has_operation_path = step.operation_path is not None
         has_workflow_id = step.workflow_id is not None
-        
+
         if not (has_operation_id or has_operation_path or has_workflow_id):
             self.errors.append(
-                f"Step '{step_id}' must specify one of: operationId, operationPath, or workflowId"
+                f"Step '{step_id}' must specify one of: operationId, operationPath, or workflowId",
             )
             return
-        
+
         # Validate operationId exists in registry
         if has_operation_id:
             if step.operation_id not in self.operation_registry.operations:
                 self.errors.append(
-                    f"Step '{step_id}' references non-existent operation '{step.operation_id}'"
+                    f"Step '{step_id}' references non-existent operation '{step.operation_id}'",
                 )
             else:
                 operation = self.operation_registry.operations[step.operation_id]
                 self._validate_step_parameters(step, operation, step_id)
-        
+
         # Validate workflowId exists
         if has_workflow_id:
             workflow_id = str(step.workflow_id)
             if not any(w.workflow_id == workflow_id for w in self.specification.workflows):
                 self.errors.append(
-                    f"Step '{step_id}' references non-existent workflow '{workflow_id}'"
+                    f"Step '{step_id}' references non-existent workflow '{workflow_id}'",
                 )
-        
+
         # Validate success criteria
         if step.success_criteria:
             for criterion in step.success_criteria:
                 self._validate_criterion(criterion, step_id)
 
     def _validate_step_parameters(
-        self, step: Step, operation: ApiOperation, step_id: str
+        self, step: Step, operation: ApiOperation, step_id: str,
     ) -> None:
         """Validate step parameters against OpenAPI operation constraints.
 
@@ -230,44 +226,42 @@ class WorkflowValidationVisitor(ArazzoVisitor):
                 elif isinstance(param, ReusableObject):
                     # Extract parameter name from reference
                     param_name = self._extract_param_name_from_reference(param.reference)
-                    if param_name:
+                    if param_name and self._validate_reusable_reference(param.reference, param_name, step_id):
                         # Validate the reference exists in components
-                        if self._validate_reusable_reference(param.reference, param_name, step_id):
-                            step_params[param_name] = param
+                        step_params[param_name] = param
                     # If reference is invalid, _validate_reusable_reference already added error
-        
+
         # Check for required parameters from operation
         required_params = {
-            name: param for name, param in operation.parameters.items() 
+            name: param for name, param in operation.parameters.items()
             if param.required
         }
-        
+
         # Validate required parameters are provided
         missing_required = set(required_params.keys()) - set(step_params.keys())
         for param_name in missing_required:
             param_def = required_params[param_name]
-            param_location = param_def.param_in.value if hasattr(param_def.param_in, 'value') else str(param_def.param_in)
+            param_location = param_def.param_in.value if hasattr(param_def.param_in, "value") else str(param_def.param_in)
             self.errors.append(
-                f"Step '{step_id}' missing required {param_location} parameter '{param_name}'"
+                f"Step '{step_id}' missing required {param_location} parameter '{param_name}'",
             )
-        
+
         # Validate provided parameters
         for param_name, step_param in step_params.items():
             if param_name not in operation.parameters:
                 self.warnings.append(
-                    f"Step '{step_id}' parameter '{param_name}' not defined in operation '{operation.operation_id}'"
+                    f"Step '{step_id}' parameter '{param_name}' not defined in operation '{operation.operation_id}'",
                 )
-            else:
-                # Validate parameter location matches (only for direct ParameterObject)
-                if isinstance(step_param, ParameterObject):
-                    op_param = operation.parameters[param_name]
-                    if hasattr(step_param, 'in_'):
-                        # If step parameter has explicit location, validate it matches
-                        op_param_location = op_param.param_in.value if hasattr(op_param.param_in, 'value') else str(op_param.param_in)
-                        if step_param.in_ != op_param_location:
-                            self.warnings.append(
-                                f"Step '{step_id}' parameter '{param_name}' location '{step_param.in_}' doesn't match operation definition '{op_param_location}'"
-                            )
+            # Validate parameter location matches (only for direct ParameterObject)
+            elif isinstance(step_param, ParameterObject):
+                op_param = operation.parameters[param_name]
+                if hasattr(step_param, "in_"):
+                    # If step parameter has explicit location, validate it matches
+                    op_param_location = op_param.param_in.value if hasattr(op_param.param_in, "value") else str(op_param.param_in)
+                    if step_param.in_ != op_param_location:
+                        self.warnings.append(
+                            f"Step '{step_id}' parameter '{param_name}' location '{step_param.in_}' doesn't match operation definition '{op_param_location}'",
+                        )
 
     def _validate_criterion(self, criterion: any, step_id: str) -> None:
         """Validate a success criterion.
@@ -278,29 +272,39 @@ class WorkflowValidationVisitor(ArazzoVisitor):
         """
         if not criterion.condition:
             self.errors.append(
-                f"Criterion in step '{step_id}' has no condition"
+                f"Criterion in step '{step_id}' has no condition",
             )
 
-    def _extract_param_name_from_reference(self, reference: str) -> Optional[str]:
-        """Extract parameter name from a reference like #/components/parameters/paramName.
+    def _extract_param_name_from_reference(self, reference: str) -> str | None:
+        """Extract parameter name from a reference.
+
+        Supports two formats:
+        - JSON Pointer: #/components/parameters/paramName
+        - Runtime Expression: $components.parameters.paramName
 
         Args:
-            reference: A JSON reference string
+            reference: A JSON reference or runtime expression string
 
         Returns:
             The parameter name, or None if reference format is invalid
         """
-        # Pattern for references like #/components/parameters/paramName
-        match = re.match(r'^#/components/parameters/([A-Za-z0-9_\-]+)$', reference)
-        if match:
-            return match.group(1)
+        # Pattern for JSON Pointer references like #/components/parameters/paramName
+        json_pointer_match = re.match(r"^#/components/parameters/([A-Za-z0-9_\-]+)$", reference)
+        if json_pointer_match:
+            return json_pointer_match.group(1)
+
+        # Pattern for runtime expression references like $components.parameters.paramName
+        runtime_expr_match = re.match(r"^\$components\.parameters\.([A-Za-z0-9_\-]+)$", reference)
+        if runtime_expr_match:
+            return runtime_expr_match.group(1)
+
         return None
 
     def _validate_reusable_reference(self, reference: str, param_name: str, step_id: str) -> bool:
         """Validate that a reusable object reference is valid.
 
         Args:
-            reference: The reference string
+            reference: The reference string (JSON Pointer or runtime expression)
             param_name: The extracted parameter name
             step_id: The step ID for error messages
 
@@ -310,52 +314,45 @@ class WorkflowValidationVisitor(ArazzoVisitor):
         # Check if specification has components
         if not self.specification.components:
             self.errors.append(
-                f"Step '{step_id}' uses reusable parameter '{param_name}' but specification has no components"
+                f"Step '{step_id}' uses reusable parameter '{param_name}' but specification has no components",
             )
             return False
-        
+
         # Check if components has parameters
         if not self.specification.components.parameters:
             self.errors.append(
-                f"Step '{step_id}' uses reusable parameter '{param_name}' but components has no parameters"
+                f"Step '{step_id}' uses reusable parameter '{param_name}' but components has no parameters",
             )
             return False
-        
+
         # Check if the referenced parameter exists
         if param_name not in self.specification.components.parameters:
             self.errors.append(
-                f"Step '{step_id}' references non-existent reusable parameter '{param_name}' via '{reference}'"
+                f"Step '{step_id}' references non-existent reusable parameter '{param_name}' via '{reference}'",
             )
             return False
-        
+
         return True
 
     def visit_info(self, instance: Info) -> None:
         """Visit info object."""
-        pass
 
     def visit_source_description(self, instance: SourceDescriptionObject) -> None:
         """Visit source description."""
-        pass
 
     def visit_criterion_expression_type(
-        self, instance: CriterionExpressionTypeObject
+        self, instance: CriterionExpressionTypeObject,
     ) -> None:
         """Visit criterion expression type."""
-        pass
 
     def visit_reusable(self, instance: ReusableObject) -> None:
         """Visit reusable object."""
-        pass
 
     def visit_parameter(self, instance: ParameterObject) -> None:
         """Visit parameter object."""
-        pass
 
     def visit_payload_replacement(self, instance: PayloadReplacementObject) -> None:
         """Visit payload replacement object."""
-        pass
 
     def visit_components(self, instance: ComponentsObject) -> None:
         """Visit components object."""
-        pass

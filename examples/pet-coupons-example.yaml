@@ -22,7 +22,7 @@ workflows:
       - stepId: find-pet
         operationId: findPetsByTags
         parameters:
-          - name: pet_tags
+          - name: tags
             in: query
             value: $inputs.my_pet_tags
         successCriteria:
@@ -35,7 +35,10 @@ workflows:
       - stepId: find-coupons
         description: Find a coupon available for the selected pet.
         operationId: getPetCoupons
-       
+        parameters:
+          - name: petId
+            in: path
+            value: $steps.find-pet.outputs.my_pet_id
         successCriteria:
           - condition: $statusCode == 200
         outputs:

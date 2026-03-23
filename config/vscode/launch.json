@@ -8,7 +8,8 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "args":["doc", "generate", "-s", "${workspaceFolder}/examples/elec-map.yaml"]
+            //"args":["doc", "generate", "-s", "${workspaceFolder}/examples/elec-map.yaml"]
+            "args": ["spec","validate", "-s","./examples/pet-coupons-example.yaml"]
         },
 
          {

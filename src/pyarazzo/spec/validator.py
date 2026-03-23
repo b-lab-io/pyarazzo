@@ -2,6 +2,7 @@
 
 import logging
 import os
+import re
 import uuid
 from pathlib import Path
 from typing import Optional
@@ -213,6 +214,7 @@ class WorkflowValidationVisitor(ArazzoVisitor):
         - Parameters are defined in the operation
         - Required parameters are provided
         - Parameter locations (header, query, path) match OpenAPI definition
+        - ReusableObject references are valid and point to existing parameters
 
         Args:
             step: The step to validate
@@ -225,6 +227,14 @@ class WorkflowValidationVisitor(ArazzoVisitor):
             for param in step.parameters:
                 if isinstance(param, ParameterObject):
                     step_params[param.name] = param
+                elif isinstance(param, ReusableObject):
+                    # Extract parameter name from reference
+                    param_name = self._extract_param_name_from_reference(param.reference)
+                    if param_name:
+                        # Validate the reference exists in components
+                        if self._validate_reusable_reference(param.reference, param_name, step_id):
+                            step_params[param_name] = param
+                    # If reference is invalid, _validate_reusable_reference already added error
         
         # Check for required parameters from operation
         required_params = {
@@ -248,15 +258,16 @@ class WorkflowValidationVisitor(ArazzoVisitor):
                     f"Step '{step_id}' parameter '{param_name}' not defined in operation '{operation.operation_id}'"
                 )
             else:
-                # Validate parameter location matches
-                op_param = operation.parameters[param_name]
-                if hasattr(step_param, 'in_'):
-                    # If step parameter has explicit location, validate it matches
-                    op_param_location = op_param.param_in.value if hasattr(op_param.param_in, 'value') else str(op_param.param_in)
-                    if step_param.in_ != op_param_location:
-                        self.warnings.append(
-                            f"Step '{step_id}' parameter '{param_name}' location '{step_param.in_}' doesn't match operation definition '{op_param_location}'"
-                        )
+                # Validate parameter location matches (only for direct ParameterObject)
+                if isinstance(step_param, ParameterObject):
+                    op_param = operation.parameters[param_name]
+                    if hasattr(step_param, 'in_'):
+                        # If step parameter has explicit location, validate it matches
+                        op_param_location = op_param.param_in.value if hasattr(op_param.param_in, 'value') else str(op_param.param_in)
+                        if step_param.in_ != op_param_location:
+                            self.warnings.append(
+                                f"Step '{step_id}' parameter '{param_name}' location '{step_param.in_}' doesn't match operation definition '{op_param_location}'"
+                            )
 
     def _validate_criterion(self, criterion: any, step_id: str) -> None:
         """Validate a success criterion.
@@ -269,6 +280,55 @@ class WorkflowValidationVisitor(ArazzoVisitor):
             self.errors.append(
                 f"Criterion in step '{step_id}' has no condition"
             )
+
+    def _extract_param_name_from_reference(self, reference: str) -> Optional[str]:
+        """Extract parameter name from a reference like #/components/parameters/paramName.
+
+        Args:
+            reference: A JSON reference string
+
+        Returns:
+            The parameter name, or None if reference format is invalid
+        """
+        # Pattern for references like #/components/parameters/paramName
+        match = re.match(r'^#/components/parameters/([A-Za-z0-9_\-]+)$', reference)
+        if match:
+            return match.group(1)
+        return None
+
+    def _validate_reusable_reference(self, reference: str, param_name: str, step_id: str) -> bool:
+        """Validate that a reusable object reference is valid.
+
+        Args:
+            reference: The reference string
+            param_name: The extracted parameter name
+            step_id: The step ID for error messages
+
+        Returns:
+            True if reference is valid, False otherwise
+        """
+        # Check if specification has components
+        if not self.specification.components:
+            self.errors.append(
+                f"Step '{step_id}' uses reusable parameter '{param_name}' but specification has no components"
+            )
+            return False
+        
+        # Check if components has parameters
+        if not self.specification.components.parameters:
+            self.errors.append(
+                f"Step '{step_id}' uses reusable parameter '{param_name}' but components has no parameters"
+            )
+            return False
+        
+        # Check if the referenced parameter exists
+        if param_name not in self.specification.components.parameters:
+            self.errors.append(
+                f"Step '{step_id}' references non-existent reusable parameter '{param_name}' via '{reference}'"
+            )
+            return False
+        
+        return True
 
     def visit_info(self, instance: Info) -> None:
         """Visit info object."""

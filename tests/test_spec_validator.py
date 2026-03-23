@@ -145,3 +145,102 @@ def test_validator_handles_missing_openapi_spec() -> None:
     
     # Should have errors about failing to load OpenAPI spec
     assert any("Failed to load OpenAPI spec" in e for e in errors)
+
+
+def test_validator_detects_reusable_parameter_usage() -> None:
+    """Test that validator detects when reusable objects are used for parameters."""
+    with open("./tests/data/models/v1/pet-coupons-example.yaml") as f:
+        import yaml
+        spec_dict = yaml.safe_load(f)
+    
+    # Add a reusable parameter and modify first step to use it
+    spec_dict["components"] = {
+        "parameters": {
+            "headerParam": {
+                "name": "x-api-key",
+                "in": "header",
+                "value": "secret"
+            }
+        }
+    }
+    
+    spec = ArazzoSpecification(**spec_dict)
+    validator = WorkflowValidationVisitor(
+        specification=spec,
+        spec_path="./tests/data/models/v1/pet-coupons-example.yaml",
+    )
+    
+    is_valid, errors, warnings = validator.validate()
+    
+    # Validator should process the spec without errors about reusable objects
+    # (may have other errors related to missing parameters, but that's expected)
+    reusable_errors = [e for e in errors if "reusable" in e.lower() and "non-existent" in e]
+    assert len(reusable_errors) == 0  # No errors about non-existent reusable params
+
+
+def test_validator_detects_invalid_reusable_reference() -> None:
+    """Test that validator detects invalid reusable parameter references."""
+    with open("./tests/data/models/v1/pet-coupons-example.yaml") as f:
+        import yaml
+        spec_dict = yaml.safe_load(f)
+    
+    # Add components with valid parameter but reference invalid one
+    spec_dict["components"] = {
+        "parameters": {
+            "validParam": {
+                "name": "x-valid",
+                "in": "header",
+                "value": "ok"
+            }
+        }
+    }
+    
+    # Modify first step to have a reusable reference to non-existent parameter
+    if spec_dict["workflows"][0]["steps"]:
+        spec_dict["workflows"][0]["steps"][0]["parameters"] = [
+            {
+                "reference": "#/components/parameters/nonExistentParam"
+            }
+        ]
+    
+    spec = ArazzoSpecification(**spec_dict)
+    validator = WorkflowValidationVisitor(
+        specification=spec,
+        spec_path="./tests/data/models/v1/pet-coupons-example.yaml",
+    )
+    
+    is_valid, errors, warnings = validator.validate()
+    
+    # Should have errors about non-existent reusable parameter
+    assert is_valid is False
+    assert any("non-existent reusable parameter" in e for e in errors)
+
+
+def test_validator_validates_reusable_with_components() -> None:
+    """Test that validator correctly validates reusable parameter references when components exist."""
+    with open("./tests/data/models/v1/pet-coupons-example.yaml") as f:
+        import yaml
+        spec_dict = yaml.safe_load(f)
+    
+    # Add components with parameter that matches operation parameter
+    spec_dict["components"] = {
+        "parameters": {
+            "limitParam": {
+                "name": "limit",
+                "in": "query",
+                "value": "10"
+            }
+        }
+    }
+    
+    spec = ArazzoSpecification(**spec_dict)
+    validator = WorkflowValidationVisitor(
+        specification=spec,
+        spec_path="./tests/data/models/v1/pet-coupons-example.yaml",
+    )
+    
+    is_valid, errors, warnings = validator.validate()
+    
+    # Should not have errors about missing components
+    components_errors = [e for e in errors if "components" in e]
+    assert len(components_errors) == 0

@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from enum import Enum
+from enum import StrEnum
 from typing import Annotated, Any, Literal, SupportsIndex
 
 from pydantic import BaseModel, Field, RootModel
@@ -17,7 +17,7 @@ from pyarazzo import utils
 
 class ArazzoVisitor(ABC):
     """Abstract Arazzo Visitor class implementing the visitor pattern.
-    
+
     This interface defines methods for visiting different types of Arazzo specification elements.
     Implementations of this interface can perform various operations (e.g., document generation,
     validation, transformation) on Arazzo specifications by traversing their structure.
@@ -143,7 +143,7 @@ class Info(ArazzoElement):
         return visitor.visit_info(self)
 
 
-class SourceType(str, Enum):
+class SourceType(StrEnum):
     """The type of source description."""
 
     arazzo = "arazzo"
@@ -175,7 +175,7 @@ class SourceDescriptionObject(ArazzoElement):
         return visitor.visit_source_description(self)
 
 
-class CriterionExpressionTypeObjectType(str, Enum):
+class CriterionExpressionTypeObjectType(StrEnum):
     """The type of condition to be applied."""
 
     jsonpath = "jsonpath"
@@ -183,7 +183,7 @@ class CriterionExpressionTypeObjectType(str, Enum):
     jsonpointer = "jsonpointer"
 
 
-class CriterionExpressionTypeObjectVersion(str, Enum):
+class CriterionExpressionTypeObjectVersion(StrEnum):
     """A short hand string representing the version of the expression type."""
 
     JSONPATH_DRAFT = "draft-goessner-dispatch-jsonpath-00"
@@ -211,14 +211,14 @@ class CriterionExpressionTypeObject(ArazzoElement):
         return visitor.visit_criterion_expression_type(self)
 
 
-class SuccessActionObjectType(str, Enum):
+class SuccessActionObjectType(StrEnum):
     """The type of action to take."""
 
     end = "end"
     goto = "goto"
 
 
-class FailureActionObjectType(str, Enum):
+class FailureActionObjectType(StrEnum):
     """The type of action to take."""
 
     end = "end"
@@ -243,7 +243,7 @@ class ReusableObject(ArazzoElement):
         return visitor.visit_reusable(self)
 
 
-class In(str, Enum):
+class In(StrEnum):
     """The location of the parameter."""
 
     path = "path"
@@ -490,7 +490,7 @@ class RequestBodyObject(BaseModel):
     ]
 
 
-class CriterionObjectConditiontype(str, Enum):
+class CriterionObjectConditiontype(StrEnum):
     """Type of the condition."""
 
     SIMPLE = "simple"

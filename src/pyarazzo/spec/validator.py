@@ -1,9 +1,11 @@
 """Workflow validation logic for Arazzo specifications."""
 
+from __future__ import annotations
+
 import logging
-import os
 import re
 import uuid
+from typing import Any
 
 from pyarazzo.model.arazzo import (
     ArazzoSpecification,
@@ -19,7 +21,7 @@ from pyarazzo.model.arazzo import (
     Step,
     Workflow,
 )
-from pyarazzo.model.openapi import ApiOperation, OperationRegistry
+from pyarazzo.model.openapi import ApiOperation, OpenApiLoader, OperationRegistry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +65,7 @@ class WorkflowValidationVisitor(ArazzoVisitor):
             if source.type == SourceType.openapi:
                 try:
                     # Resolve relative URLs based on spec file location
-                    url = self._resolve_source_url(source.url)
+                    url = OpenApiLoader._resolve_url(source.url, self.spec_path)
                     self.operation_registry.append(openapi_spec=url)
                 except OSError as e:
                     self.initialization_errors.append(
@@ -79,16 +81,7 @@ class WorkflowValidationVisitor(ArazzoVisitor):
         Returns:
             The resolved URL
         """
-        # If URL is remote, return as-is
-        if url.startswith(("http://", "https://", "ftp://")):
-            return url
-
-        # If we have a spec path and the URL is relative, resolve it
-        if self.spec_path and not os.path.isabs(url):
-            spec_dir = os.path.dirname(os.path.abspath(self.spec_path))
-            return os.path.normpath(os.path.join(spec_dir, url))
-
-        return url
+        return OpenApiLoader._resolve_url(url, self.spec_path)
 
     def validate(self) -> tuple[bool, list[str], list[str]]:
         """Validate the specification.
@@ -218,7 +211,7 @@ class WorkflowValidationVisitor(ArazzoVisitor):
             step_id: The step ID for error messages
         """
         # Collect step parameters by name
-        step_params = {}
+        step_params: dict[str, ParameterObject | ReusableObject] = {}
         if step.parameters:
             for param in step.parameters:
                 if isinstance(param, ParameterObject):
@@ -263,7 +256,7 @@ class WorkflowValidationVisitor(ArazzoVisitor):
                             f"Step '{step_id}' parameter '{param_name}' location '{step_param.in_}' doesn't match operation definition '{op_param_location}'",
                         )
 
-    def _validate_criterion(self, criterion: any, step_id: str) -> None:
+    def _validate_criterion(self, criterion: Any, step_id: str) -> None:
         """Validate a success criterion.
 
         Args:

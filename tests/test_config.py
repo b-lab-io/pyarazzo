@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from pyarazzo.config import (
     CONTENT_TYPE_JSON,
@@ -13,7 +14,6 @@ from pyarazzo.config import (
     ContentTypeConfig,
     FileFormat,
     PlantUMLConfig,
-    RobotFrameworkConfig,
 )
 
 
@@ -43,14 +43,6 @@ def test_plantuml_config_custom_values() -> None:
     assert config.handwritten is False
 
 
-def test_robot_framework_config_defaults() -> None:
-    """Test RobotFrameworkConfig has robot keywords."""
-    config = RobotFrameworkConfig()
-    assert "log" in config.keywords
-    assert config.keywords["log"] == "Log"
-    assert config.keywords["http_request"] == "RequestsLibrary.Request"
-
-
 def test_content_type_config_defaults() -> None:
     """Test ContentTypeConfig has correct defaults."""
     config = ContentTypeConfig()
@@ -62,7 +54,7 @@ def test_content_type_config_defaults() -> None:
 def test_content_type_config_alias_support() -> None:
     """Test ContentTypeConfig supports field aliases."""
     # Using aliases to construct
-    config = ContentTypeConfig(json="custom/json", yaml=["my/yaml"])
+    config = ContentTypeConfig(json="custom/json", yaml=["my/yaml"]) # type: ignore[call-arg]
     assert config.json_type == "custom/json"
     assert config.yaml_types == ["my/yaml"]
 
@@ -72,15 +64,14 @@ def test_app_config_defaults() -> None:
     config = AppConfig()
     assert config.http_request_timeout == 30
     assert isinstance(config.plantuml, PlantUMLConfig)
-    assert isinstance(config.robot_framework, RobotFrameworkConfig)
     assert isinstance(config.content_types, ContentTypeConfig)
 
 
 def test_app_config_frozen() -> None:
     """Test that AppConfig is frozen (immutable)."""
     config = DEFAULT_CONFIG
-    with pytest.raises(Exception):
-        config.http_request_timeout = 60  # type: ignore
+    with pytest.raises(ValidationError):
+        config.http_request_timeout = 60
 
 
 def test_default_config_instance() -> None:

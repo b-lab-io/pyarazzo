@@ -25,7 +25,7 @@ from pyarazzo.model.arazzo import (
     Workflow,
     WorkflowId,
 )
-from pyarazzo.model.openapi import ApiOperation, OperationRegistry
+from pyarazzo.model.openapi import ApiOperation, OpenApiLoader, OperationRegistry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -33,16 +33,18 @@ LOGGER = logging.getLogger(__name__)
 class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
     """Visitor that generates markdown files for workflows."""
 
-    def __init__(self, output_dir: str, correlation_id: str | None = None) -> None:
+    def __init__(self, output_dir: str, correlation_id: str | None = None, spec_path: str | None = None) -> None:
         """Constructor.
 
         Args:
             output_dir (str): output dir path
             correlation_id (Optional[str]): correlation ID for tracing
+            spec_path (Optional[str]): path to the specification file for URL resolution
         """
         self.output_dir = output_dir
         self.content = ""
         self.correlation_id = correlation_id or str(uuid.uuid4())
+        self.spec_path = spec_path
         self.operation_registry = OperationRegistry(operations={})
         os.makedirs(output_dir, exist_ok=True)
 
@@ -153,7 +155,9 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
         if instance.type != SourceType.openapi:
             raise ValueError(f"not supported source type {instance.type} for source {instance.name} ")
 
-        self.operation_registry.append(openapi_spec=instance.url)
+        # Resolve URL relative to spec file if spec_path is available
+        url = OpenApiLoader._resolve_url(instance.url, self.spec_path)
+        self.operation_registry.append(openapi_spec=url)
 
     def visit_criterion_expression_type(self, instance: CriterionExpressionTypeObject) -> None:
         """Visit a criterion expression used for conditional logic.

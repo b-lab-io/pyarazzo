@@ -19,14 +19,14 @@ def sample_spec_file() -> str:
 
 
 @pytest.fixture
-def temp_output_dir() -> str:
+def temp_output_dir() -> str: #type: ignore[misc]
     """Provide a temporary output directory."""
     with tempfile.TemporaryDirectory() as tmpdir:
         yield tmpdir
 
 
 @patch("pyarazzo.doc.generator.SimpleMarkdownGeneratorVisitor.visit_specification")
-def test_generate_command_with_valid_spec(mock_visit: object, sample_spec_file: str, temp_output_dir: str) -> None:
+def test_generate_command_with_valid_spec(mock_visit_spec: object, sample_spec_file: str, temp_output_dir: str) -> None:  # noqa: ARG001
     """Test doc generation with valid specification."""
     runner = CliRunner()
     result = runner.invoke(generate, ["-s", sample_spec_file, "-o", temp_output_dir])

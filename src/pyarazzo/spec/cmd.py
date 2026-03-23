@@ -39,7 +39,7 @@ def spec() -> None:
 )
 def validate(spec_path: str, workflow_id: str | None) -> None:
     """Validate an Arazzo specification for workflow executability.
-    
+
     Validates that:
     - All referenced operations exist in OpenAPI specs
     - All required parameters are provided
@@ -93,10 +93,10 @@ def validate(spec_path: str, workflow_id: str | None) -> None:
             LOGGER.error(f"[{correlation_id}] Validation failed with {len(errors)} errors")
 
     except ArazzoError as error:
-        LOGGER.error(f"[{correlation_id}] ArazzoError: {error}")
+        LOGGER.exception(f"[{correlation_id}] ArazzoError")
         click.echo(f"Error: {error}", err=True)
-        raise click.Abort() from error
+        raise click.Abort from error
     except Exception as error:
-        LOGGER.error(f"[{correlation_id}] Unexpected error: {error}")
+        LOGGER.exception(f"[{correlation_id}] Unexpected error")
         click.echo(f"Unexpected error: {error}", err=True)
-        raise click.Abort() from error
+        raise click.Abort from error

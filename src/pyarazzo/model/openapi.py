@@ -1,8 +1,9 @@
 """pydantic models for Open API."""
 
 import json
+import os
 import re
-from enum import Enum
+from enum import StrEnum
 from typing import Annotated, Any
 
 import httpx
@@ -14,7 +15,7 @@ from pydantic import BaseModel, Field, field_validator
 from requests.exceptions import HTTPError
 
 
-class HttpMethod(str, Enum):
+class HttpMethod(StrEnum):
     """Enum for HTTP methods."""
 
     get = "get"
@@ -118,6 +119,28 @@ class OpenApiLoader:
         return re.match(pattern, url) is not None
 
     @staticmethod
+    def _resolve_url(url: str, spec_path: str | None = None) -> str:
+        """Resolve a source URL relative to the specification file.
+
+        Args:
+            url: The URL to resolve (can be absolute or relative)
+            spec_path: Optional path to the specification file (used for relative URL resolution)
+
+        Returns:
+            The resolved URL
+        """
+        # If URL is remote, return as-is
+        if url.startswith(("http://", "https://", "ftp://")):
+            return url
+
+        # If we have a spec path and the URL is relative, resolve it
+        if spec_path and not os.path.isabs(url):
+            spec_dir = os.path.dirname(os.path.abspath(spec_path))
+            return os.path.normpath(os.path.join(spec_dir, url))
+
+        return url
+
+    @staticmethod
     def _download_file(url: str) -> dict:
         """Download a file from a URL and return its content as a dictionary."""
         # Send a GET request to the URL
@@ -162,6 +185,7 @@ class OpenApiLoader:
         """Load OpenAPI specification from a URL or file and return operations."""
         operations = {}
         spec_dict = None
+
         # detect if http or path
         if OpenApiLoader._is_remote(url):
             spec_dict = OpenApiLoader._download_file(url)
@@ -179,7 +203,7 @@ class OpenApiLoader:
 
         # just accumulate all parameters at the operation level
 
-        for path_name, path_item in open_api_spec.paths.items():
+        for path_name, path_item in (open_api_spec.paths or {}).items():
             method_handlers = {
                 "post": (HttpMethod.post, path_item.post),
                 "get": (HttpMethod.get, path_item.get),
@@ -190,14 +214,13 @@ class OpenApiLoader:
 
             method_handlers = {k: v for k, v in method_handlers.items() if v is not None}
 
-            for _, (http_method, operation_data) in method_handlers.items():
+            for _, (http_method, operation_data) in method_handlers.items(): #type: ignore[misc]
                 if operation_data is not None:
                     operation = ApiOperation(
                         service_name=open_api_spec.info.title,
                         operation_id="no-set",
                         method=None,
                         path=path_name,
-                        headers={},
                         parameters={},
                         body=None,
                     )

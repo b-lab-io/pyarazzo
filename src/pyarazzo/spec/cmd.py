@@ -92,7 +92,6 @@ def validate(spec_path: str, workflow_id: Optional[str]) -> None:
                 LOGGER.warning(f"[{correlation_id}] Validation passed with {len(warnings)} warnings")
         else:
             LOGGER.error(f"[{correlation_id}] Validation failed with {len(errors)} errors")
-            raise click.Abort()
         
     except ArazzoError as error:
         LOGGER.error(f"[{correlation_id}] ArazzoError: {error}")

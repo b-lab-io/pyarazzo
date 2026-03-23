@@ -1,9 +1,12 @@
 """Workflow validation logic for Arazzo specifications."""
 
+from __future__ import annotations
+
 import logging
 import os
 import re
 import uuid
+from typing import Any
 
 from pyarazzo.model.arazzo import (
     ArazzoSpecification,
@@ -218,7 +221,7 @@ class WorkflowValidationVisitor(ArazzoVisitor):
             step_id: The step ID for error messages
         """
         # Collect step parameters by name
-        step_params = {}
+        step_params: dict[str, ParameterObject | ReusableObject] = {}
         if step.parameters:
             for param in step.parameters:
                 if isinstance(param, ParameterObject):
@@ -263,7 +266,7 @@ class WorkflowValidationVisitor(ArazzoVisitor):
                             f"Step '{step_id}' parameter '{param_name}' location '{step_param.in_}' doesn't match operation definition '{op_param_location}'",
                         )
 
-    def _validate_criterion(self, criterion: any, step_id: str) -> None:
+    def _validate_criterion(self, criterion: Any, step_id: str) -> None:
         """Validate a success criterion.
 
         Args:

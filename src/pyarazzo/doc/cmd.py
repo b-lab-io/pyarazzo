@@ -50,10 +50,10 @@ def generate(spec_path: str, output_dir: str) -> None:
         LOGGER.info(f"[{correlation_id}] Documentation generated successfully")
         click.echo(f"Documentation generated successfully from {spec_path} to {output_dir}")
     except ArazzoError as error:
-        LOGGER.error(f"[{correlation_id}] ArazzoError: {error}")
+        LOGGER.exception(f"[{correlation_id}] ArazzoError")
         click.echo(f"Error: {error}", err=True)
         raise click.Abort from error
-    except Exception as error:  # noqa: BLE001
-        LOGGER.error(f"[{correlation_id}] Unexpected error: {error}")
+    except Exception as error:
+        LOGGER.exception(f"[{correlation_id}] Unexpected error")
         click.echo(f"Unexpected error generating documentation: {error}", err=True)
         raise click.Abort from GenerationError(f"Documentation generation failed: {error!s}")

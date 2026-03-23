@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import yaml
 
-from pyarazzo.model.arazzo import ArazzoSpecification
+from pyarazzo.model.arazzo import ArazzoSpecification, WorkflowId
 from pyarazzo.spec.validator import WorkflowValidationVisitor
 
 
@@ -84,11 +84,11 @@ def test_validator_with_specific_workflow_id() -> None:
 
     # Get the first workflow ID if one exists
     if spec.workflows:
-        workflow_id = spec.workflows[0].workflow_id
+        workflow_id : WorkflowId = spec.workflows[0].workflow_id
         validator = WorkflowValidationVisitor(
             specification=spec,
             spec_path="./tests/data/models/v1/pet-coupons-example.yaml",
-            workflow_id=workflow_id,
+            workflow_id=str(workflow_id),
         )
 
         _, errors, _ = validator.validate()

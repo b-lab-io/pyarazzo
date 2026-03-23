@@ -33,7 +33,7 @@ def test_load_from_url_with_correlation_id(mock_get: object) -> None:
     mock_response = MagicMock()
     mock_response.json.return_value = {"key": "value"}
     mock_response.headers = {"Content-Type": "application/json"}
-    mock_get.return_value = mock_response  # type: ignore
+    mock_get.return_value = mock_response  # type: ignore[attr-defined]
 
     correlation_id = "test-correlation-456"
     spec = utils.load_from_url("https://example.com/spec.json", correlation_id=correlation_id)

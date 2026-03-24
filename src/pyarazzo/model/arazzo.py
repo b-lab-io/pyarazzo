@@ -6,8 +6,8 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from enum import Enum
-from typing import Annotated, Any, SupportsIndex
+from enum import StrEnum
+from typing import Annotated, Any, Literal, SupportsIndex
 
 from pydantic import BaseModel, Field, RootModel
 
@@ -16,86 +16,91 @@ from pyarazzo import utils
 
 
 class ArazzoVisitor(ABC):
-    """Abstract Arazzo Vistor class."""
+    """Abstract Arazzo Visitor class implementing the visitor pattern.
+
+    This interface defines methods for visiting different types of Arazzo specification elements.
+    Implementations of this interface can perform various operations (e.g., document generation,
+    validation, transformation) on Arazzo specifications by traversing their structure.
+    """
 
     @abstractmethod
     def visit_specification(self, instance: ArazzoSpecification) -> None:
-        """Visit ArazzoSpecification instance.
+        """Visit an Arazzo specification.
 
         Args:
-            instance (ArazzoSpecification): _description_
+            instance (ArazzoSpecification): The Arazzo specification to visit.
         """
 
     @abstractmethod
     def visit_workflow(self, instance: Workflow) -> None:
-        """Visit Workflow instance.
+        """Visit a workflow definition.
 
         Args:
-            instance (Workflow): _description_
+            instance (Workflow): The workflow to visit.
         """
 
     @abstractmethod
     def visit_step(self, instance: Step) -> None:
-        """Visit Step instance.
+        """Visit a step within a workflow.
 
         Args:
-            instance (Step): _description_
+            instance (Step): The step to visit.
         """
 
     @abstractmethod
     def visit_components(self, instance: ComponentsObject) -> None:
-        """Visit ComponentsObject instance.
+        """Visit a components object containing reusable definitions.
 
         Args:
-            instance (ComponentsObject): _description_
+            instance (ComponentsObject): The components object to visit.
         """
 
     @abstractmethod
     def visit_info(self, instance: Info) -> None:
-        """Visit Info instance.
+        """Visit metadata information about the Arazzo description.
 
         Args:
-            instance (Info): _description_
+            instance (Info): The info object containing metadata to visit.
         """
 
     @abstractmethod
     def visit_source_description(self, instance: SourceDescriptionObject) -> None:
-        """Visit SourceDescriptionObject instance.
+        """Visit a source description (e.g., OpenAPI specification reference).
 
         Args:
-            instance (SourceDescriptionObject): _description_
+            instance (SourceDescriptionObject): The source description to visit.
         """
 
     @abstractmethod
     def visit_criterion_expression_type(self, instance: CriterionExpressionTypeObject) -> None:
-        """Visit CriterionExpressionTypeObject instance.
+        """Visit a criterion expression used for conditional logic.
 
         Args:
-            instance (CriterionExpressionTypeObject): _description_
+            instance (CriterionExpressionTypeObject): The criterion expression to visit.
         """
 
     @abstractmethod
     def visit_reusable(self, instance: ReusableObject) -> None:
-        """Visit ReusableObject instance.
+        """Visit a reusable object component.
 
         Args:
-            instance (ReusableObject): _description_
+            instance (ReusableObject): The reusable object to visit.
         """
 
     @abstractmethod
     def visit_parameter(self, instance: ParameterObject) -> None:
-        """Visit ParameterObject instance.
+        """Visit a parameter definition.
 
         Args:
-            instance (ParameterObject): _description_
+            instance (ParameterObject): The parameter object to visit.
         """
 
     @abstractmethod
     def visit_payload_replacement(self, instance: PayloadReplacementObject) -> None:
-        """Visit PayloadReplacementObject instance.
+        """Visit a payload replacement operation.
 
         Args:
-            instance (PayloadReplacementObject): _description_
+            instance (PayloadReplacementObject): The payload replacement to visit.
         """
 
 
@@ -138,7 +143,7 @@ class Info(ArazzoElement):
         return visitor.visit_info(self)
 
 
-class SourceType(str, Enum):
+class SourceType(StrEnum):
     """The type of source description."""
 
     arazzo = "arazzo"
@@ -170,20 +175,24 @@ class SourceDescriptionObject(ArazzoElement):
         return visitor.visit_source_description(self)
 
 
-class CriterionExpressionTypeObjectType(str, Enum):
+class CriterionExpressionTypeObjectType(StrEnum):
     """The type of condition to be applied."""
 
     jsonpath = "jsonpath"
     xpath = "xpath"
+    jsonpointer = "jsonpointer"
 
 
-class CriterionExpressionTypeObjectVersion(str, Enum):
+class CriterionExpressionTypeObjectVersion(StrEnum):
     """A short hand string representing the version of the expression type."""
 
-    JSONPATH = "draft-goessner-dispatch-jsonpath-00"
-    XPATH30 = "xpath-30"
-    XPATH20 = "xpath-20"
+    JSONPATH_DRAFT = "draft-goessner-dispatch-jsonpath-00"
+    JSONPATH_RFC = "rfc9535"
     XPATH10 = "xpath-10"
+    XPATH20 = "xpath-20"
+    XPATH30 = "xpath-30"
+    XPATH31 = "xpath-31"
+    JSONPOINTER = "rfc6901"
 
 
 class CriterionExpressionTypeObject(ArazzoElement):
@@ -202,14 +211,14 @@ class CriterionExpressionTypeObject(ArazzoElement):
         return visitor.visit_criterion_expression_type(self)
 
 
-class SuccessActionObjectType(str, Enum):
+class SuccessActionObjectType(StrEnum):
     """The type of action to take."""
 
     end = "end"
     goto = "goto"
 
 
-class FailureActionObjectType(str, Enum):
+class FailureActionObjectType(StrEnum):
     """The type of action to take."""
 
     end = "end"
@@ -234,14 +243,13 @@ class ReusableObject(ArazzoElement):
         return visitor.visit_reusable(self)
 
 
-class In(str, Enum):
+class In(StrEnum):
     """The location of the parameter."""
 
     path = "path"
     query = "query"
     header = "header"
     cookie = "cookie"
-    body = "body"
 
 
 class ParameterObject(ArazzoElement):
@@ -269,17 +277,57 @@ class PayloadReplacementObject(ArazzoElement):
         str,
         Field(
             ...,
-            description="A JSON Pointer or XPath Expression which MUST be resolved against the request body",
+            description="A JSONPath, JSON Pointer, or XPath Expression which MUST be resolved against the request body",
         ),
+    ]
+    target_selector_type: Annotated[
+        Any,
+        Field(None, description="The selector expression type to use (e.g., `jsonpath`, `xpath`, or `jsonpointer`)", alias="targetSelectorType"),
     ]
     value: Annotated[
         Any,
-        Field(..., description="The value list within the target location"),
+        Field(..., description="The value to set at the location defined by the target. May be a literal, a runtime expression string, or a selector object."),
     ]
 
     def accept(self, visitor: ArazzoVisitor) -> None:
         """Accept instance of Arazzo Visitor."""
         return visitor.visit_payload_replacement(self)
+
+
+class ExpressionTypeObject(BaseModel):
+    """An object used to describe the type and version of an expression used within a Criterion Object or Selector Object."""
+
+    type: Annotated[
+        Literal["jsonpath", "xpath", "jsonpointer"],
+        Field(..., description="The type of selector to use"),
+    ]
+    version: Annotated[
+        str,
+        Field(..., description="A short hand string representing the version of the expression type"),
+    ]
+
+
+class SelectorType(RootModel):
+    """A selector expression type that may be a simple string enum or an Expression Type Object for version-specific support."""
+
+    root: Annotated[Literal["jsonpointer", "jsonpath", "xpath"] | ExpressionTypeObject, Field(...)]
+
+
+class SelectorObject(BaseModel):
+    """An object which enables fine-grained traversal and precise data selection from structured data."""
+
+    context: Annotated[
+        str,
+        Field(..., description="A valid Runtime Expression which MUST evaluate to structured data (e.g., `$response.body`), and sets the context for the selector to be applied on"),
+    ]
+    selector: Annotated[
+        str,
+        Field(..., description="A selector expression (e.g., `$.items[0].id`, `/Envelope/Item`) in the form of JSONPath expression, XPath expression, or JSON Pointer expression"),
+    ]
+    type: Annotated[
+        Any,
+        Field(..., description="The selector expression type to use (e.g., `jsonpath`, `xpath`, or `jsonpointer`) or an Expression Type Object for older version support"),
+    ]
 
 
 class StepId(RootModel):
@@ -442,7 +490,7 @@ class RequestBodyObject(BaseModel):
     ]
 
 
-class CriterionObjectConditiontype(str, Enum):
+class CriterionObjectConditiontype(StrEnum):
     """Type of the condition."""
 
     SIMPLE = "simple"
@@ -514,10 +562,10 @@ class FailureActionObject(BaseModel):
         Field(
             None,
             description="The workflowId referencing an existing workflow within the Arazzo description to transfer to upon failure of the step",
-            alias="WorkflowId",
+            alias="workflowId",
         ),
     ]
-    step_id: Annotated[StepId, Field(description="Unique string to represent the step", alias="stepId")]
+    step_id: Annotated[StepId, Field(None, description="The stepId to transfer to upon failure of the step", alias="stepId")]
     retry_after: Annotated[
         float | None,
         Field(
@@ -587,10 +635,11 @@ class Step(ArazzoElement):
         ),
     ]
     request_body: Annotated[
-        RequestBodyObject,
+        RequestBodyObject | None,
         Field(
-            [],
-            description="A list of parameters that MUST be passed to an operation or workflow as referenced by operationId, operationPath, or workflowId",
+            None,
+            description="The request body to pass to an operation as referenced by operationId or operationPath",
+            alias="requestBody",
         ),
     ]
     success_criteria: Annotated[
@@ -802,7 +851,7 @@ class ArazzoSpecification(ArazzoElement):
         Field(
             ...,
             description="The version number of the Arazzo Specification",
-            pattern=r"^1\.0\.\d+(-.+)?$",
+            pattern=r"^1\.1\.\d+(-.+)?$",
         ),
     ]
     info: Annotated[

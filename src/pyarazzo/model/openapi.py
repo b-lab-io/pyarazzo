@@ -1,20 +1,21 @@
 """pydantic models for Open API."""
 
 import json
+import os
 import re
-from enum import Enum
+from enum import StrEnum
 from typing import Annotated, Any
 
 import httpx
 import jsonref
 import yaml
 from openapi_pydantic.v3.v3_0 import OpenAPI, Operation, PathItem
-from openapi_pydantic.v3.v3_0.parameter import Parameter, ParameterLocation
+from openapi_pydantic.v3.v3_0.parameter import Parameter
 from pydantic import BaseModel, Field, field_validator
 from requests.exceptions import HTTPError
 
 
-class HttpMethod(str, Enum):
+class HttpMethod(StrEnum):
     """Enum for HTTP methods."""
 
     get = "get"
@@ -35,14 +36,12 @@ class ApiOperation(BaseModel):
         operationId (str): Unique identifier for the operation.
         method (Optional[HttpMethod]): HTTP method (e.g., GET, POST) for the operation.
         path (str): URL path for the operation.
-        headers (dict): Dictionary of HTTP headers associated with the operation.
-        parameters (dict): Dictionary of parameters for the operation.
+        parameters (dict): Dictionary of parameters by name with full Parameter objects
         body (Optional[dict]): Request body for the operation, if applicable.
 
     Methods:
         append_parameters(parameters: List[Union[Parameter, Reference]]):
-            Appends a list of parameters to the operation, updating both the parameters and headers.
-            If a parameter is of type 'header', it is added to the headers dictionary.
+            Appends a list of parameters to the operation.
     """
 
     service_name: Annotated[
@@ -62,20 +61,21 @@ class ApiOperation(BaseModel):
     ]
     method: HttpMethod | None = None
     path: str
-    headers: dict = {}
-    query_parameters: dict = {}
-    parameters: dict = {}
+    parameters: dict[str, Parameter] = {}
     body: dict | None = None
 
     def append_parameters(self, parameters: list[Parameter]) -> None:
         """Append parameters to the operation.
 
-        This method will update the operation's parameters and headers.
-        It will also update the headers if any parameter is of type 'header'.
+        Stores full Parameter objects with their metadata (required, type, etc.)
+        for validation against step definitions.
         """
         for param in parameters:
-            if param is not None and param.param_in == ParameterLocation.HEADER:
-                self.headers.update(param)
+            if param is None:
+                continue
+
+            # Store full Parameter object by name
+            self.parameters[param.name] = param
 
 
 class OperationRegistry(BaseModel):
@@ -117,6 +117,28 @@ class OpenApiLoader:
         )
 
         return re.match(pattern, url) is not None
+
+    @staticmethod
+    def _resolve_url(url: str, spec_path: str | None = None) -> str:
+        """Resolve a source URL relative to the specification file.
+
+        Args:
+            url: The URL to resolve (can be absolute or relative)
+            spec_path: Optional path to the specification file (used for relative URL resolution)
+
+        Returns:
+            The resolved URL
+        """
+        # If URL is remote, return as-is
+        if url.startswith(("http://", "https://", "ftp://")):
+            return url
+
+        # If we have a spec path and the URL is relative, resolve it
+        if spec_path and not os.path.isabs(url):
+            spec_dir = os.path.dirname(os.path.abspath(spec_path))
+            return os.path.normpath(os.path.join(spec_dir, url))
+
+        return url
 
     @staticmethod
     def _download_file(url: str) -> dict:
@@ -163,6 +185,7 @@ class OpenApiLoader:
         """Load OpenAPI specification from a URL or file and return operations."""
         operations = {}
         spec_dict = None
+
         # detect if http or path
         if OpenApiLoader._is_remote(url):
             spec_dict = OpenApiLoader._download_file(url)
@@ -180,28 +203,28 @@ class OpenApiLoader:
 
         # just accumulate all parameters at the operation level
 
-        for path_name, path_item in open_api_spec.paths.items():
-            operation = ApiOperation(
-                service_name=open_api_spec.info.title,
-                operation_id="no-set",
-                method=None,
-                path=path_name,
-                headers={},
-                parameters={},
-                body=None,
-            )
-
+        for path_name, path_item in (open_api_spec.paths or {}).items():
             method_handlers = {
                 "post": (HttpMethod.post, path_item.post),
                 "get": (HttpMethod.get, path_item.get),
                 "put": (HttpMethod.put, path_item.put),
+                "delete": (HttpMethod.delete, path_item.delete) if hasattr(path_item, "delete") else None,
+                "patch": (HttpMethod.patch, path_item.patch) if hasattr(path_item, "patch") else None,
             }
 
-            for _, (http_method, operation_data) in method_handlers.items():
-                if operation_data is not None:
-                    OpenApiLoader._process_operation(path_item, http_method, operation_data, operation)
+            method_handlers = {k: v for k, v in method_handlers.items() if v is not None}
 
-            # TODO : Guarantee that the operationId is not missing
-            operations[operation.operation_id] = operation
+            for _, (http_method, operation_data) in method_handlers.items(): #type: ignore[misc]
+                if operation_data is not None:
+                    operation = ApiOperation(
+                        service_name=open_api_spec.info.title,
+                        operation_id="no-set",
+                        method=None,
+                        path=path_name,
+                        parameters={},
+                        body=None,
+                    )
+                    OpenApiLoader._process_operation(path_item, http_method, operation_data, operation)
+                    operations[operation.operation_id] = operation
 
         return operations

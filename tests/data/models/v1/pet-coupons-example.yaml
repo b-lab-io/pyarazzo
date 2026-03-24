@@ -1,4 +1,4 @@
-arazzo: 1.0.0
+arazzo: 1.1.0
 info:
   title: Petstore - Apply Coupons
   version: 1.0.0
@@ -8,7 +8,7 @@ info:
     c) orders the pet while applying the coupons from step b.
 sourceDescriptions:
   - name: pet-coupons
-    url: ./pet-coupons.openapi.yaml
+    url: ../pet-coupons.openapi.yaml
     type: openapi
 workflows:
   - workflowId: apply-coupon
@@ -22,7 +22,7 @@ workflows:
       - stepId: find-pet
         operationId: findPetsByTags
         parameters:
-          - name: pet_tags
+          - name: tags
             in: query
             value: $inputs.my_pet_tags
         successCriteria:
@@ -36,7 +36,7 @@ workflows:
         description: Find a coupon available for the selected pet.
         operationId: getPetCoupons
         parameters:
-          - name: pet_id
+          - name: petId
             in: path
             value: $steps.find-pet.outputs.my_pet_id
         successCriteria:

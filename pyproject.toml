@@ -35,7 +35,6 @@ dependencies = [
     "pydantic>=2.12.5",
     "pyyaml>=6.0.2",
     "requests>=2.32.3",
-    "robotframework>=7.4.0",
     "types-requests>=2.32.0.20250328",
 ]
 
@@ -114,6 +113,7 @@ dev = [
     # YORE: EOL 3.10: Remove line.
     "tomli>=2.0; python_version < '3.11'",
     "datamodel-code-generator>=0.26.4",
+    "griffecli>=0.2.1",
 ]
 
 [tool.setuptools]

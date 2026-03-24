@@ -8,6 +8,7 @@ import click
 
 from pyarazzo.doc.cmd import doc
 from pyarazzo.exceptions import ArazzoError
+from pyarazzo.spec.cmd import spec
 
 LOGGER = logging.getLogger(__name__)
 
@@ -60,6 +61,7 @@ def cli(verbose: int) -> None:
 
 # adding commands subgroups
 cli.add_command(doc)
+cli.add_command(spec)
 
 
 def main() -> None:

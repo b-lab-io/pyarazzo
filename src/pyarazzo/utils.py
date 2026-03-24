@@ -9,6 +9,7 @@ This module provides utilities for:
 import importlib.resources
 import json
 import logging
+import uuid
 from urllib.parse import urlparse
 
 import requests
@@ -30,11 +31,12 @@ with importlib.resources.files("pyarazzo").joinpath("schema.yaml").open("r") as 
     schema = yaml.safe_load(schema_file)
 
 
-def load_spec(path_or_url: str) -> dict:
+def load_spec(path_or_url: str, correlation_id: str | None = None) -> dict:
     """Load a specification from file in the json or yaml format.
 
     Args:
         path_or_url (str): file path to the specification
+        correlation_id (Optional[str]): correlation ID for tracing
 
     Raises:
         ArazzoValidationError: when specification fails schema validation
@@ -42,20 +44,22 @@ def load_spec(path_or_url: str) -> dict:
     Returns:
         dict: specification as a dict
     """
-    document = load_data(path_or_url)
+    correlation_id = correlation_id or str(uuid.uuid4())
+    document = load_data(path_or_url, correlation_id=correlation_id)
     try:
         validate(document, schema)
     except ValidationError as e:
-        LOGGER.exception(f"Schema validation failed for {path_or_url}")
+        LOGGER.exception(f"[{correlation_id}] Schema validation failed for {path_or_url}")
         raise ArazzoValidationError(f"Invalid specification: {e.message}") from e
     return document
 
 
-def load_from_url(url: str) -> dict:
+def load_from_url(url: str, correlation_id: str | None = None) -> dict:
     """Load data from an url supporting JSON and YAML formats.
 
     Args:
         url (str): url to a file.
+        correlation_id (Optional[str]): correlation ID for tracing
 
     Raises:
         LoadError: when HTTP request fails or content type is unsupported.
@@ -63,11 +67,12 @@ def load_from_url(url: str) -> dict:
     Returns:
         dict: Document as dict.
     """
+    correlation_id = correlation_id or str(uuid.uuid4())
     try:
         response = requests.get(url, timeout=HTTP_REQUEST_TIMEOUT)
         response.raise_for_status()
     except requests.RequestException as e:
-        LOGGER.exception(f"HTTP request failed for {url}")
+        LOGGER.exception(f"[{correlation_id}] HTTP request failed for {url}")
         raise LoadError(f"Failed to load from URL {url}: {e!s}") from e
 
     content_type = response.headers.get("Content-Type", "")
@@ -80,15 +85,16 @@ def load_from_url(url: str) -> dict:
 
         raise LoadError(f"Unsupported content type: {content_type}")
     except (json.JSONDecodeError, yaml.YAMLError) as e:
-        LOGGER.exception(f"Failed to parse response from {url}")
+        LOGGER.exception(f"[{correlation_id}] Failed to parse response from {url}")
         raise LoadError(f"Failed to parse content from {url}: {e!s}") from e
 
 
-def load_from_file(path: str) -> dict:
+def load_from_file(path: str, correlation_id: str | None = None) -> dict:
     """Load data from a local path supporting JSON and YAML formats.
 
     Args:
         path (str): Path to a local file.
+        correlation_id (Optional[str]): correlation ID for tracing
 
     Raises:
         LoadError: when file cannot be read or content cannot be parsed.
@@ -96,6 +102,7 @@ def load_from_file(path: str) -> dict:
     Returns:
         dict: Document as dict.
     """
+    correlation_id = correlation_id or str(uuid.uuid4())
     try:
         if path.endswith(".json"):
             with open(path) as file:
@@ -106,18 +113,19 @@ def load_from_file(path: str) -> dict:
         else:
             raise LoadError(f"Unsupported file extension: {path}")
     except FileNotFoundError as e:
-        LOGGER.exception(f"File not found: {path}")
+        LOGGER.exception(f"[{correlation_id}] File not found: {path}")
         raise LoadError(f"File not found: {path}") from e
     except (json.JSONDecodeError, yaml.YAMLError) as e:
-        LOGGER.exception(f"Failed to parse file: {path}")
+        LOGGER.exception(f"[{correlation_id}] Failed to parse file: {path}")
         raise LoadError(f"Failed to parse file {path}: {e!s}") from e
 
 
-def load_data(path_or_url: str) -> dict:
+def load_data(path_or_url: str, correlation_id: str | None = None) -> dict:
     """Load data from a local path or a URL, supporting JSON and YAML formats.
 
     Args:
         path_or_url (str): Path to a local file or a URL to a resource.
+        correlation_id (Optional[str]): correlation ID for tracing
 
     Returns:
         dict: Data as a Python object (dict or list).
@@ -125,25 +133,28 @@ def load_data(path_or_url: str) -> dict:
     Raises:
         LoadError: when data cannot be loaded or parsed.
     """
+    correlation_id = correlation_id or str(uuid.uuid4())
     result = urlparse(path_or_url)
     if all([result.scheme, result.netloc]):
-        return load_from_url(path_or_url)
+        return load_from_url(path_or_url, correlation_id=correlation_id)
 
-    return load_from_file(path_or_url)
+    return load_from_file(path_or_url, correlation_id=correlation_id)
 
 
-def schema_validation(spec: dict) -> None:
+def schema_validation(spec: dict, correlation_id: str | None = None) -> None:
     """Validate the specification against the JSON Schema.
 
     Args:
         spec (dict): The specification to validate.
+        correlation_id (Optional[str]): correlation ID for tracing
 
     Raises:
         ArazzoValidationError: when specification fails schema validation.
     """
+    correlation_id = correlation_id or str(uuid.uuid4())
     try:
         validate(instance=spec, schema=schema)
-        LOGGER.info("Specification is valid")
+        LOGGER.info(f"[{correlation_id}] Specification is valid")
     except ValidationError as exc:
-        LOGGER.exception("Specification validation failed")
+        LOGGER.exception(f"[{correlation_id}] Specification validation failed")
         raise ArazzoValidationError(f"Invalid specification: {exc.message}") from exc

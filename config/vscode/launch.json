@@ -8,27 +8,25 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": false,
-            //"args":["doc", "generate", "-s", "${workspaceFolder}/examples/elec-map.yaml"]
-            "args": ["spec","validate", "-s","./examples/pet-coupons-example.yaml"]
+            "args": "${command:pickArgs}"
         },
-
-         {
-            "name": "python Module ",
+        {
+            "name": "run",
             "type": "debugpy",
             "request": "launch",
-            "program": "-m pyarazzo",
+            "module": "pyarazzo",
             "console": "integratedTerminal",
-            "justMyCode": false
+            "justMyCode": false,
+            "args": "${command:pickArgs}"
         },
         {
             "name": "docs",
             "type": "debugpy",
             "request": "launch",
-            "module": "mkdocs",
+            "module": "zensical",
             "justMyCode": false,
             "args": [
-                "serve",
-                "-v"
+                "serve"
             ]
         },
         {

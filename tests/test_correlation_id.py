@@ -28,12 +28,12 @@ def test_load_from_file_with_correlation_id(valid_json_file: str) -> None:
 
 
 @patch("pyarazzo.utils.requests.get")
-def test_load_from_url_with_correlation_id(mock_get: object) -> None:
+def test_load_from_url_with_correlation_id(mock_get: MagicMock) -> None:
     """Test load_from_url includes correlation_id in logging."""
     mock_response = MagicMock()
     mock_response.json.return_value = {"key": "value"}
     mock_response.headers = {"Content-Type": "application/json"}
-    mock_get.return_value = mock_response  # type: ignore[attr-defined]
+    mock_get.return_value = mock_response
 
     correlation_id = "test-correlation-456"
     spec = utils.load_from_url("https://example.com/spec.json", correlation_id=correlation_id)

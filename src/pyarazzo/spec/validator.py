@@ -30,7 +30,6 @@ class ValidationError(Exception):
     """Raised when a validation error occurs."""
 
 
-
 class WorkflowValidationVisitor(ArazzoVisitor):
     """Visitor for validating workflows against OpenAPI specifications."""
 
@@ -116,9 +115,7 @@ class WorkflowValidationVisitor(ArazzoVisitor):
         # Validate workflows
         workflows_to_validate = spec.workflows
         if self.workflow_id:
-            workflows_to_validate = [
-                w for w in spec.workflows if str(w.workflow_id) == self.workflow_id
-            ]
+            workflows_to_validate = [w for w in spec.workflows if str(w.workflow_id) == self.workflow_id]
             if not workflows_to_validate:
                 self.errors.append(f"Workflow '{self.workflow_id}' not found in specification")
                 return
@@ -195,7 +192,10 @@ class WorkflowValidationVisitor(ArazzoVisitor):
                 self._validate_criterion(criterion, step_id)
 
     def _validate_step_parameters(
-        self, step: Step, operation: ApiOperation, step_id: str,
+        self,
+        step: Step,
+        operation: ApiOperation,
+        step_id: str,
     ) -> None:
         """Validate step parameters against OpenAPI operation constraints.
 
@@ -225,16 +225,15 @@ class WorkflowValidationVisitor(ArazzoVisitor):
                     # If reference is invalid, _validate_reusable_reference already added error
 
         # Check for required parameters from operation
-        required_params = {
-            name: param for name, param in operation.parameters.items()
-            if param.required
-        }
+        required_params = {name: param for name, param in operation.parameters.items() if param.required}
 
         # Validate required parameters are provided
         missing_required = set(required_params.keys()) - set(step_params.keys())
         for param_name in missing_required:
             param_def = required_params[param_name]
-            param_location = param_def.param_in.value if hasattr(param_def.param_in, "value") else str(param_def.param_in)
+            param_location = (
+                param_def.param_in.value if hasattr(param_def.param_in, "value") else str(param_def.param_in)
+            )
             self.errors.append(
                 f"Step '{step_id}' missing required {param_location} parameter '{param_name}'",
             )
@@ -250,7 +249,9 @@ class WorkflowValidationVisitor(ArazzoVisitor):
                 op_param = operation.parameters[param_name]
                 if hasattr(step_param, "in_"):
                     # If step parameter has explicit location, validate it matches
-                    op_param_location = op_param.param_in.value if hasattr(op_param.param_in, "value") else str(op_param.param_in)
+                    op_param_location = (
+                        op_param.param_in.value if hasattr(op_param.param_in, "value") else str(op_param.param_in)
+                    )
                     if step_param.in_ != op_param_location:
                         self.warnings.append(
                             f"Step '{step_id}' parameter '{param_name}' location '{step_param.in_}' doesn't match operation definition '{op_param_location}'",
@@ -334,7 +335,8 @@ class WorkflowValidationVisitor(ArazzoVisitor):
         """Visit source description."""
 
     def visit_criterion_expression_type(
-        self, instance: CriterionExpressionTypeObject,
+        self,
+        instance: CriterionExpressionTypeObject,
     ) -> None:
         """Visit criterion expression type."""
 

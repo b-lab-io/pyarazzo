@@ -1,11 +1,10 @@
-"""Tests for the `cli` module."""
+"""Tests for the CLI."""
 
 from __future__ import annotations
 
-# from typing import TYPE_CHECKING
 from click.testing import CliRunner
 
-from pyarazzo import cli  # , debug
+from pyarazzo.cli import cli
 
 # if TYPE_CHECKING:
 #     import pytest
@@ -14,8 +13,8 @@ from pyarazzo import cli  # , debug
 def test_main() -> None:
     """Basic CLI test."""
     runner = CliRunner()
-    result = runner.invoke(cli, [])  # type: ignore[arg-type]
-    assert result.exit_code == 1
+    result = runner.invoke(cli, ["--help"])  # type: ignore[invalid-argument-type]
+    assert result.exit_code == 0
 
 
 # def test_show_help(capsys: pytest.CaptureFixture) -> None:

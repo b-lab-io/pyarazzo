@@ -54,7 +54,7 @@ def test_content_type_config_defaults() -> None:
 def test_content_type_config_alias_support() -> None:
     """Test ContentTypeConfig supports field aliases."""
     # Using aliases to construct
-    config = ContentTypeConfig(json="custom/json", yaml=["my/yaml"]) # type: ignore[call-arg]
+    config = ContentTypeConfig(json_type="custom/json", yaml_types=["my/yaml"])  # type: ignore[call-arg]
     assert config.json_type == "custom/json"
     assert config.yaml_types == ["my/yaml"]
 

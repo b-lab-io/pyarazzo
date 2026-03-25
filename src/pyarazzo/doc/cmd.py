@@ -44,7 +44,9 @@ def generate(spec_path: str, output_dir: str) -> None:
         LOGGER.info(f"[{correlation_id}] Starting documentation generation from {spec_path}")
         specification = ArazzoSpecificationLoader.load(spec_path)
         visitor: SimpleMarkdownGeneratorVisitor = SimpleMarkdownGeneratorVisitor(
-            output_dir, correlation_id=correlation_id, spec_path=spec_path,
+            output_dir,
+            correlation_id=correlation_id,
+            spec_path=spec_path,
         )
         specification.accept(visitor)
         LOGGER.info(f"[{correlation_id}] Documentation generated successfully")

@@ -24,7 +24,7 @@ class ArazzoVisitor(ABC):
     """
 
     @abstractmethod
-    def visit_specification(self, instance: ArazzoSpecification) -> None:
+    def visit_specification(self, spec: ArazzoSpecification) -> None:
         """Visit an Arazzo specification.
 
         Args:
@@ -32,7 +32,7 @@ class ArazzoVisitor(ABC):
         """
 
     @abstractmethod
-    def visit_workflow(self, instance: Workflow) -> None:
+    def visit_workflow(self, workflow: Workflow) -> None:
         """Visit a workflow definition.
 
         Args:
@@ -40,7 +40,7 @@ class ArazzoVisitor(ABC):
         """
 
     @abstractmethod
-    def visit_step(self, instance: Step) -> None:
+    def visit_step(self, step: Step) -> None:
         """Visit a step within a workflow.
 
         Args:
@@ -282,11 +282,18 @@ class PayloadReplacementObject(ArazzoElement):
     ]
     target_selector_type: Annotated[
         Any,
-        Field(None, description="The selector expression type to use (e.g., `jsonpath`, `xpath`, or `jsonpointer`)", alias="targetSelectorType"),
+        Field(
+            None,
+            description="The selector expression type to use (e.g., `jsonpath`, `xpath`, or `jsonpointer`)",
+            alias="targetSelectorType",
+        ),
     ]
     value: Annotated[
         Any,
-        Field(..., description="The value to set at the location defined by the target. May be a literal, a runtime expression string, or a selector object."),
+        Field(
+            ...,
+            description="The value to set at the location defined by the target. May be a literal, a runtime expression string, or a selector object.",
+        ),
     ]
 
     def accept(self, visitor: ArazzoVisitor) -> None:
@@ -318,15 +325,24 @@ class SelectorObject(BaseModel):
 
     context: Annotated[
         str,
-        Field(..., description="A valid Runtime Expression which MUST evaluate to structured data (e.g., `$response.body`), and sets the context for the selector to be applied on"),
+        Field(
+            ...,
+            description="A valid Runtime Expression which MUST evaluate to structured data (e.g., `$response.body`), and sets the context for the selector to be applied on",
+        ),
     ]
     selector: Annotated[
         str,
-        Field(..., description="A selector expression (e.g., `$.items[0].id`, `/Envelope/Item`) in the form of JSONPath expression, XPath expression, or JSON Pointer expression"),
+        Field(
+            ...,
+            description="A selector expression (e.g., `$.items[0].id`, `/Envelope/Item`) in the form of JSONPath expression, XPath expression, or JSON Pointer expression",
+        ),
     ]
     type: Annotated[
         Any,
-        Field(..., description="The selector expression type to use (e.g., `jsonpath`, `xpath`, or `jsonpointer`) or an Expression Type Object for older version support"),
+        Field(
+            ...,
+            description="The selector expression type to use (e.g., `jsonpath`, `xpath`, or `jsonpointer`) or an Expression Type Object for older version support",
+        ),
     ]
 
 
@@ -565,7 +581,10 @@ class FailureActionObject(BaseModel):
             alias="workflowId",
         ),
     ]
-    step_id: Annotated[StepId, Field(None, description="The stepId to transfer to upon failure of the step", alias="stepId")]
+    step_id: Annotated[
+        StepId,
+        Field(None, description="The stepId to transfer to upon failure of the step", alias="stepId"),
+    ]
     retry_after: Annotated[
         float | None,
         Field(

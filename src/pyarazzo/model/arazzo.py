@@ -582,7 +582,8 @@ class FailureActionObject(BaseModel):
         ),
     ]
     step_id: Annotated[
-        StepId, Field(None, description="The stepId to transfer to upon failure of the step", alias="stepId")
+        StepId,
+        Field(None, description="The stepId to transfer to upon failure of the step", alias="stepId"),
     ]
     retry_after: Annotated[
         float | None,

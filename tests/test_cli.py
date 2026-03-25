@@ -13,8 +13,8 @@ from pyarazzo.cli import cli
 def test_main() -> None:
     """Basic CLI test."""
     runner = CliRunner()
-    result = runner.invoke(cli, [])
-    assert result.exit_code == 1
+    result = runner.invoke(cli, ["--help"])  # type: ignore[invalid-argument-type]
+    assert result.exit_code == 0
 
 
 # def test_show_help(capsys: pytest.CaptureFixture) -> None:

@@ -29,7 +29,7 @@
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "curl -LsSf https://astral.sh/uv/install.sh | sh"
+	"postCreateCommand": "./.devcontainer/post-create.sh",
 
 	// Configure tool-specific properties.
 	// "customizations": {},

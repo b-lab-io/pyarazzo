@@ -74,6 +74,9 @@ def main() -> None:
         with ctx:
             result = cli.invoke(ctx)
             sys.exit(result)
+    except click.exceptions.NoArgsIsHelpError:
+        click.echo(USAGE)
+        sys.exit(1)
     except click.exceptions.Exit as error:
         # click lib uses a exception to terminate the program
         # also in success case

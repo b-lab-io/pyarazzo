@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import yaml
 
 from pyarazzo.model.arazzo import ArazzoSpecification, WorkflowId
@@ -11,8 +13,7 @@ from pyarazzo.spec.validator import WorkflowValidationVisitor
 def test_validator_detects_missing_required_parameters() -> None:
     """Test that validator correctly identifies missing required parameters."""
     # Create a test specification with missing required parameters
-    with open("./tests/data/models/v1/pet-coupons-example.yaml") as f:
-        spec_dict = yaml.safe_load(f)
+    spec_dict = yaml.safe_load(Path("./tests/data/models/v1/pet-coupons-example.yaml").read_text(encoding="utf-8"))
 
     # Remove the page parameter from a step that requires it
     # The buy-available-pet workflow's find-pet step has page, but let's remove it
@@ -43,8 +44,7 @@ def test_validator_detects_missing_required_parameters() -> None:
 
 def test_validator_loads_openapi_spec() -> None:
     """Test that validator properly loads OpenAPI specifications."""
-    with open("./tests/data/models/v1/pet-coupons-example.yaml") as f:
-        spec_dict = yaml.safe_load(f)
+    spec_dict = yaml.safe_load(Path("./tests/data/models/v1/pet-coupons-example.yaml").read_text(encoding="utf-8"))
 
     spec = ArazzoSpecification(**spec_dict)
     validator = WorkflowValidationVisitor(
@@ -58,8 +58,7 @@ def test_validator_loads_openapi_spec() -> None:
 
 def test_validator_validates_workflow_dependencies() -> None:
     """Test that validator checks workflow dependencies."""
-    with open("./tests/data/models/v1/pet-coupons-example.yaml") as f:
-        spec_dict = yaml.safe_load(f)
+    spec_dict = yaml.safe_load(Path("./tests/data/models/v1/pet-coupons-example.yaml").read_text(encoding="utf-8"))
 
     spec = ArazzoSpecification(**spec_dict)
     validator = WorkflowValidationVisitor(
@@ -77,14 +76,13 @@ def test_validator_validates_workflow_dependencies() -> None:
 
 def test_validator_with_specific_workflow_id() -> None:
     """Test that validator can validate a specific workflow."""
-    with open("./tests/data/models/v1/pet-coupons-example.yaml") as f:
-        spec_dict = yaml.safe_load(f)
+    spec_dict = yaml.safe_load(Path("./tests/data/models/v1/pet-coupons-example.yaml").read_text(encoding="utf-8"))
 
     spec = ArazzoSpecification(**spec_dict)
 
     # Get the first workflow ID if one exists
     if spec.workflows:
-        workflow_id : WorkflowId = spec.workflows[0].workflow_id
+        workflow_id: WorkflowId = spec.workflows[0].workflow_id
         validator = WorkflowValidationVisitor(
             specification=spec,
             spec_path="./tests/data/models/v1/pet-coupons-example.yaml",
@@ -100,8 +98,7 @@ def test_validator_with_specific_workflow_id() -> None:
 
 def test_validator_detects_nonexistent_workflow_id() -> None:
     """Test that validator detects when workflow filter doesn't match."""
-    with open("./tests/data/models/v1/pet-coupons-example.yaml") as f:
-        spec_dict = yaml.safe_load(f)
+    spec_dict = yaml.safe_load(Path("./tests/data/models/v1/pet-coupons-example.yaml").read_text(encoding="utf-8"))
 
     spec = ArazzoSpecification(**spec_dict)
     validator = WorkflowValidationVisitor(
@@ -119,8 +116,7 @@ def test_validator_detects_nonexistent_workflow_id() -> None:
 
 def test_validator_url_resolution_with_relative_paths() -> None:
     """Test that validator resolves relative URLs correctly."""
-    with open("./tests/data/models/v1/pet-coupons-example.yaml") as f:
-        spec_dict = yaml.safe_load(f)
+    spec_dict = yaml.safe_load(Path("./tests/data/models/v1/pet-coupons-example.yaml").read_text(encoding="utf-8"))
 
     spec = ArazzoSpecification(**spec_dict)
 
@@ -137,8 +133,7 @@ def test_validator_url_resolution_with_relative_paths() -> None:
 
 def test_validator_handles_missing_openapi_spec() -> None:
     """Test that validator handles missing OpenAPI specs gracefully."""
-    with open("./tests/data/models/v1/pet-coupons-example.yaml") as f:
-        spec_dict = yaml.safe_load(f)
+    spec_dict = yaml.safe_load(Path("./tests/data/models/v1/pet-coupons-example.yaml").read_text(encoding="utf-8"))
 
     # Modify spec to point to non-existent file
     spec_dict["sourceDescriptions"][0]["url"] = "/nonexistent/path/spec.json"
@@ -157,8 +152,7 @@ def test_validator_handles_missing_openapi_spec() -> None:
 
 def test_validator_detects_reusable_parameter_usage() -> None:
     """Test that validator detects when reusable objects are used for parameters."""
-    with open("./tests/data/models/v1/pet-coupons-example.yaml") as f:
-        spec_dict = yaml.safe_load(f)
+    spec_dict = yaml.safe_load(Path("./tests/data/models/v1/pet-coupons-example.yaml").read_text(encoding="utf-8"))
 
     # The spec already has reusable parameters in components (page, pageSize)
     # used by the buy-available-pet workflow
@@ -177,8 +171,7 @@ def test_validator_detects_reusable_parameter_usage() -> None:
 
 def test_validator_detects_invalid_reusable_reference() -> None:
     """Test that validator detects invalid reusable parameter references."""
-    with open("./tests/data/models/v1/pet-coupons-example.yaml") as f:
-        spec_dict = yaml.safe_load(f)
+    spec_dict = yaml.safe_load(Path("./tests/data/models/v1/pet-coupons-example.yaml").read_text(encoding="utf-8"))
 
     # Add components with valid parameter but reference invalid one
     spec_dict["components"] = {
@@ -214,8 +207,7 @@ def test_validator_detects_invalid_reusable_reference() -> None:
 
 def test_validator_validates_reusable_with_components() -> None:
     """Test that validator correctly validates reusable parameter references when components exist."""
-    with open("./tests/data/models/v1/pet-coupons-example.yaml") as f:
-        spec_dict = yaml.safe_load(f)
+    spec_dict = yaml.safe_load(Path("./tests/data/models/v1/pet-coupons-example.yaml").read_text(encoding="utf-8"))
 
     # The components already exist in the spec with page and pageSize parameters
     # Let's verify that reusable parameters from components are properly validated

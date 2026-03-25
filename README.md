@@ -1,8 +1,9 @@
 # pyarazzo
 
 [![ci](https://github.com/b-lab-io/pyarazzo/workflows/ci/badge.svg)](https://github.com/b-lab-io/pyarazzo/actions?query=workflow%3Aci)
-[![documentation](https://img.shields.io/badge/docs-mkdocs-708FCC.svg?style=flat)](https://b-lab-io.github.io/pyarazzo/)
+[![documentation](https://img.shields.io/badge/docs-zensical-FF9100.svg?style=flat)](https://b-lab-io.github.io/pyarazzo/)
 [![pypi version](https://img.shields.io/pypi/v/pyarazzo.svg)](https://pypi.org/project/pyarazzo/)
+[![gitter](https://img.shields.io/badge/matrix-chat-4DB798.svg?style=flat)](https://app.gitter.im/#/room/#pyarazzo:gitter.im)
 
 CLI to transform Arazzo specification into some other formats:
 

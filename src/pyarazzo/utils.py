@@ -10,6 +10,7 @@ import importlib.resources
 import json
 import logging
 import uuid
+from pathlib import Path
 from urllib.parse import urlparse
 
 import requests
@@ -27,7 +28,7 @@ from pyarazzo.exceptions import ValidationError as ArazzoValidationError
 LOGGER = logging.getLogger(__name__)
 
 # Load tge arazzo specification Schema for resources
-with importlib.resources.files("pyarazzo").joinpath("schema.yaml").open("r") as schema_file:
+with importlib.resources.files("pyarazzo").joinpath("schema.yaml").open("r", encoding="utf-8") as schema_file:
     schema = yaml.safe_load(schema_file)
 
 
@@ -105,13 +106,10 @@ def load_from_file(path: str, correlation_id: str | None = None) -> dict:
     correlation_id = correlation_id or str(uuid.uuid4())
     try:
         if path.endswith(".json"):
-            with open(path) as file:
-                return json.load(file)
-        elif path.endswith((".yaml", ".yml")):
-            with open(path) as file:
-                return yaml.safe_load(file)
-        else:
-            raise LoadError(f"Unsupported file extension: {path}")
+            return json.loads(Path(path).read_text(encoding="utf-8"))
+        if path.endswith((".yaml", ".yml")):
+            return yaml.safe_load(Path(path).read_text(encoding="utf-8"))
+        raise LoadError(f"Unsupported file extension: {path}")
     except FileNotFoundError as e:
         LOGGER.exception(f"[{correlation_id}] File not found: {path}")
         raise LoadError(f"File not found: {path}") from e

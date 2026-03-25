@@ -1,9 +1,9 @@
 """pydantic models for Open API."""
 
 import json
-import os
 import re
 from enum import StrEnum
+from pathlib import Path
 from typing import Annotated, Any
 
 import httpx
@@ -134,9 +134,9 @@ class OpenApiLoader:
             return url
 
         # If we have a spec path and the URL is relative, resolve it
-        if spec_path and not os.path.isabs(url):
-            spec_dir = os.path.dirname(os.path.abspath(spec_path))
-            return os.path.normpath(os.path.join(spec_dir, url))
+        if spec_path and not Path(url).is_absolute():
+            spec_dir = Path(spec_path).parent.resolve()
+            return str((spec_dir / url).resolve())
 
         return url
 
@@ -190,7 +190,7 @@ class OpenApiLoader:
         if OpenApiLoader._is_remote(url):
             spec_dict = OpenApiLoader._download_file(url)
         else:
-            with open(url) as file:
+            with Path(url).open(encoding="utf-8") as file:
                 if url.endswith(".json"):
                     spec_dict = json.load(file)
                 if url.endswith((".yaml", ".yml")):
@@ -214,7 +214,7 @@ class OpenApiLoader:
 
             method_handlers = {k: v for k, v in method_handlers.items() if v is not None}
 
-            for _, (http_method, operation_data) in method_handlers.items(): #type: ignore[misc]
+            for http_method, operation_data in method_handlers.values():
                 if operation_data is not None:
                     operation = ApiOperation(
                         service_name=open_api_spec.info.title,

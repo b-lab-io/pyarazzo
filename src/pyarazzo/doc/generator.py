@@ -5,8 +5,8 @@ It includes markdown generation with PlantUML diagrams for workflow visualizatio
 """
 
 import logging
-import os
 import uuid
+from pathlib import Path
 
 from pyarazzo.config import PLANTUML_SETTINGS
 from pyarazzo.model.arazzo import (
@@ -46,7 +46,7 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
         self.correlation_id = correlation_id or str(uuid.uuid4())
         self.spec_path = spec_path
         self.operation_registry = OperationRegistry(operations={})
-        os.makedirs(output_dir, exist_ok=True)
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     def plantumlify(self, name: str | WorkflowId | StepId) -> str:
         """Convert a string into a plantuml string format. Removing spaces and hyphens replacing them with underscores.
@@ -75,10 +75,7 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
     def visit_workflow(self, workflow: Workflow) -> None:
         """Generate markdown content for a workflow, including PlantUML diagram."""
         LOGGER.info(f"[{self.correlation_id}] Generating workflow documentation: {workflow.workflow_id}")
-        filename = os.path.join(
-            self.output_dir,
-            f"{workflow.workflow_id.replace(' ', '_').lower()}.md",
-        )
+        filename = Path(self.output_dir) / f"{workflow.workflow_id.replace(' ', '_').lower()}.md"
 
         # Start building the markdown content
         self.content = f"# {workflow.workflow_id}\n\n"
@@ -122,8 +119,7 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
         for step in workflow.steps:
             step.accept(self)
         # Write to file
-        with open(filename, "w") as f:
-            f.write(self.content)
+        filename.write_text(self.content)
 
         LOGGER.info(f"[{self.correlation_id}] Generated: {filename}")
 

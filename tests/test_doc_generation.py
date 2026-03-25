@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import os
 import tempfile
+from pathlib import Path
 
 import pytest
 
@@ -40,9 +40,9 @@ def test_load_spec_unsupported_format() -> None:
 def test_doc_generator_creates_output_dir() -> None:
     """Test that doc generator creates output directory."""
     with tempfile.TemporaryDirectory() as tmpdir:
-        output_dir = os.path.join(tmpdir, "docs", "nested")
+        output_dir = str(Path(tmpdir) / "docs" / "nested")
         SimpleMarkdownGeneratorVisitor(output_dir)
-        assert os.path.exists(output_dir)
+        assert Path(output_dir).exists()
 
 
 def test_doc_generation_visitor_instantiation() -> None:
@@ -50,7 +50,7 @@ def test_doc_generation_visitor_instantiation() -> None:
     with tempfile.TemporaryDirectory() as tmpdir:
         generator = SimpleMarkdownGeneratorVisitor(tmpdir)
         assert generator.output_dir == tmpdir
-        assert os.path.exists(tmpdir)
+        assert Path(tmpdir).exists()
         assert generator.operation_registry is not None
         assert generator.content == ""
 

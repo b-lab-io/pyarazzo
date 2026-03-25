@@ -1,5 +1,7 @@
 """Entry point module of the tool."""
 
+from __future__ import annotations
+
 import logging
 import sys
 from importlib.metadata import PackageNotFoundError, version

@@ -4,12 +4,16 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 import pytest
 from click.testing import CliRunner
 
 from pyarazzo.doc.cmd import generate
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 
 @pytest.fixture
@@ -19,7 +23,7 @@ def sample_spec_file() -> str:
 
 
 @pytest.fixture
-def temp_output_dir() -> str: #type: ignore[misc]
+def temp_output_dir() -> Generator[str]:
     """Provide a temporary output directory."""
     with tempfile.TemporaryDirectory() as tmpdir:
         yield tmpdir

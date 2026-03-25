@@ -3,6 +3,7 @@
 import json
 import tempfile
 from collections.abc import Generator
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -17,7 +18,7 @@ from pyarazzo.exceptions import LoadError, ValidationError
 @pytest.fixture
 def valid_json_file() -> Generator[str, Any]:
     """Generate a valid Json file."""
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", dir=".") as tmp:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", dir=".", encoding="utf-8") as tmp:
         json.dump({"key": "value"}, tmp)
         tmp.flush()
         yield tmp.name
@@ -26,7 +27,7 @@ def valid_json_file() -> Generator[str, Any]:
 @pytest.fixture
 def valid_yaml_file() -> Generator[str, Any]:
     """Generate a valid yaml file."""
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", dir=".") as tmp:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", dir=".", encoding="utf-8") as tmp:
         yaml.dump({"key": "value"}, tmp)
         tmp.flush()
         yield tmp.name
@@ -127,8 +128,7 @@ def test_load_data_valid_url(mock_get: Any) -> None:
 
 def test_schema_validation_valid_spec() -> None:
     """Read the test method name."""
-    with open("./tests/data/test_utils_valid.json") as file:
-        spec = json.load(file)
+    spec = json.loads(Path("./tests/data/test_utils_valid.json").read_text(encoding="utf-8"))
     utils.schema_validation(spec)  # Should not raise an exception
 
 
@@ -155,7 +155,6 @@ def test_load_data_invalid_local_file() -> None:
 
 def test_load_data_invalid_json(valid_json_file: Any) -> None:
     """Read the test method name."""
-    with open(valid_json_file, "w") as f:
-        f.write("Invalid JSON")
+    Path(valid_json_file).write_text("Invalid JSON")
     with pytest.raises(LoadError):
         utils.load_data(valid_json_file)

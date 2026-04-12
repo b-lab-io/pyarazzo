@@ -7,7 +7,8 @@
 
 CLI to transform Arazzo specification into some other formats:
 
-- Simple Markdown format combining plnat uml to
+- Simple Markdown format combining plantuml and markdown
+- 
 - [planned] robot framework scritps to use robot as execution and execution engine 
 
 ## Installation

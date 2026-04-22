@@ -81,15 +81,18 @@ class _RunError(subprocess.CalledProcessError):
 
 def run(version: str, cmd: str, *args: str, **kwargs: Any) -> None:
     """Run a command in a virtual environment."""
-    kwargs = {"check": True, **kwargs}
-    uv_run = ["uv", "run", "--no-sync"]
+    #print(f"PYTHON_VERSIONS: {PYTHON_VERSIONS} -> version: {version} " )
+    base_kwargs = {"check": True, **kwargs}
+    uv_run = ["uv", "run", "--no-sync",]
+    
     try:
         if version == "default":
+            print("default environment")
             with environ(UV_PROJECT_ENVIRONMENT=".venv"):
                 subprocess.run([*uv_run, cmd, *args], **kwargs)  # noqa: S603, PLW1510
         else:
             with environ(UV_PROJECT_ENVIRONMENT=f".venvs/{version}", MULTIRUN="1"):
-                subprocess.run([*uv_run, cmd, *args], **kwargs)  # noqa: S603, PLW1510
+                subprocess.run([*uv_run, cmd, *args], env=os.environ.copy(), **base_kwargs)  # noqa: S603, PLW1510
     except subprocess.CalledProcessError as process:
         raise _RunError(
             returncode=process.returncode,

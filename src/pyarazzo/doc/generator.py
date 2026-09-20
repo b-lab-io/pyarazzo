@@ -100,9 +100,13 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
             called_service = self.plantumlify(step.step_id)
 
             if step.operation_id is not None:
-                operation: ApiOperation = self.operation_registry.operations[step.operation_id]
-                called_service = self.plantumlify(operation.service_name)
-                step_description = f"{operation.method} {operation.path}"
+                operation: ApiOperation | None = self.operation_registry.get(step.operation_id)
+                if operation is not None:
+                    called_service = self.plantumlify(operation.service_name)
+                    step_description = f"{operation.method} {operation.path}"
+                else:
+                    called_service = self.plantumlify(step.step_id)
+                    step_description = step.operation_id
                 self.content += f"{self.plantumlify(workflow.workflow_id)} --> {called_service} : {step_description}\n"
 
             if step.workflow_id is not None:
@@ -119,7 +123,7 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
         for step in workflow.steps:
             step.accept(self)
         # Write to file
-        filename.write_text(self.content)
+        filename.write_text(self.content, encoding="utf-8")
 
         LOGGER.info(f"[{self.correlation_id}] Generated: {filename}")
 
@@ -127,13 +131,17 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
         """Generate markdown content for a step."""
         self.content += f"### {step.step_id}\n\n"
         self.content += f"**ID**: {step.step_id}\n\n"
-        self.content += f"{step.description}\n\n"
+        if step.description:
+            self.content += f"{step.description}\n\n"
 
-        # if step.depends_on:
-        #     content += "**Dependencies**:\n"
-        #     for dependency in step.depends_on:
-        #         content += f"- {dependency}\n"
-        #     content += "\n"
+        if step.depends_on:
+            self.content += "**Dependencies**:\n"
+            for dependency in step.depends_on:
+                self.content += f"- {dependency}\n"
+            self.content += "\n"
+
+        if step.timeout:
+            self.content += f"**Timeout**: {step.timeout}ms\n\n"
 
     def visit_info(self, instance: Info) -> None:
         """Visit metadata information about the Arazzo description.
@@ -149,11 +157,14 @@ class SimpleMarkdownGeneratorVisitor(ArazzoVisitor):
             instance (SourceDescriptionObject): The source description to visit.
         """
         if instance.type != SourceType.openapi:
-            raise ValueError(f"not supported source type {instance.type} for source {instance.name} ")
+            LOGGER.info(
+                f"[{self.correlation_id}] Skipping non-OpenAPI source '{instance.name}' (type: {instance.type})",
+            )
+            return
 
         # Resolve URL relative to spec file if spec_path is available
         url = OpenApiLoader._resolve_url(instance.url, self.spec_path)
-        self.operation_registry.append(openapi_spec=url)
+        self.operation_registry.append(openapi_spec=url, source_name=instance.name)
 
     def visit_criterion_expression_type(self, instance: CriterionExpressionTypeObject) -> None:
         """Visit a criterion expression used for conditional logic.

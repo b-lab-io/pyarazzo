@@ -1,0 +1,48 @@
+arazzo: 1.1.0
+$self: ./arazzo-1.1-sample.yaml
+info:
+  title: Petstore 1.1 Workflow
+  version: 1.0.0
+  description: A sample Arazzo 1.1 specification exercising $self, timeout, dependsOn, and qualified operation IDs.
+sourceDescriptions:
+  - name: petstore-api
+    url: ../petstore-3.1.openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: pet-order-workflow
+    summary: Check a pet and order it.
+    description: Verifies pet availability and places an order.
+    inputs:
+      type: object
+      properties:
+        petId:
+          type: string
+      required:
+        - petId
+    steps:
+      - stepId: check-pet
+        description: Check pet details.
+        operationId: $sourceDescriptions.petstore-api.getPet
+        timeout: 1000
+        parameters:
+          - name: petId
+            in: path
+            value: $inputs.petId
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          retrievedPetId: $response.body#/id
+      - stepId: order-pet
+        description: Place order for the pet.
+        dependsOn:
+          - check-pet
+        operationId: $sourceDescriptions.petstore-api.orderPet
+        timeout: 2000
+        parameters:
+          - name: petId
+            in: path
+            value: $steps.check-pet.outputs.retrievedPetId
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          orderStatus: $response.body#/status

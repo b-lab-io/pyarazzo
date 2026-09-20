@@ -62,3 +62,33 @@ def test_plantuml_name_conversion() -> None:
         assert generator.plantumlify("My Workflow") == "My_Workflow"
         assert generator.plantumlify("my-step-id") == "my_step_id"
         assert generator.plantumlify("already_formatted") == "already_formatted"
+
+
+def test_doc_generation_arazzo_1_1() -> None:
+    """Test generating documentation for an Arazzo 1.1 specification referencing OpenAPI 3.1."""
+    from pyarazzo.model.arazzo import ArazzoSpecificationLoader
+
+    spec_path = "tests/data/models/v1/arazzo-1.1-sample.yaml"
+    spec = ArazzoSpecificationLoader.load(spec_path)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        visitor = SimpleMarkdownGeneratorVisitor(tmpdir, spec_path=spec_path)
+        spec.accept(visitor)
+
+        output_file = Path(tmpdir) / "pet-order-workflow.md"
+        assert output_file.exists()
+        content = output_file.read_text(encoding="utf-8")
+
+        # Verify workflow and diagram content
+        assert "# pet-order-workflow" in content
+        assert "PetStore_3.1_API" in content
+        assert "get /pets/{petId}" in content
+        assert "post /pets/{petId}/orders" in content
+
+        # Verify step details including Arazzo 1.1 timeout and dependencies
+        assert "### check-pet" in content
+        assert "**Timeout**: 1000ms" in content
+        assert "### order-pet" in content
+        assert "**Dependencies**:" in content
+        assert "- check-pet" in content
+        assert "**Timeout**: 2000ms" in content

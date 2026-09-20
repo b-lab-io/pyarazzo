@@ -9,10 +9,31 @@ from typing import Annotated, Any
 import httpx
 import jsonref
 import yaml
-from openapi_pydantic.v3.v3_0 import OpenAPI, Operation, PathItem
+from openapi_pydantic.v3.v3_0 import (
+    OpenAPI as OpenAPI30,
+)
+from openapi_pydantic.v3.v3_0 import (
+    Operation as Operation30,
+)
+from openapi_pydantic.v3.v3_0 import (
+    PathItem as PathItem30,
+)
 from openapi_pydantic.v3.v3_0.parameter import Parameter
+from openapi_pydantic.v3.v3_1 import (
+    OpenAPI as OpenAPI31,
+)
+from openapi_pydantic.v3.v3_1 import (
+    Operation as Operation31,
+)
+from openapi_pydantic.v3.v3_1 import (
+    PathItem as PathItem31,
+)
 from pydantic import BaseModel, Field, field_validator
 from requests.exceptions import HTTPError
+
+OpenAPI = OpenAPI30 | OpenAPI31
+Operation = Operation30 | Operation31
+PathItem = PathItem30 | PathItem31
 
 
 class HttpMethod(StrEnum):
@@ -88,15 +109,44 @@ class OperationRegistry(BaseModel):
 
     @classmethod
     @field_validator("operations")
-    def check_unique_ids(cls: Any, v: dict[str, OpenAPI]) -> dict[str, OpenAPI]:
+    def check_unique_ids(cls: Any, v: dict[str, ApiOperation]) -> dict[str, ApiOperation]:
         """Ensure that all operation IDs are unique inside a workflow."""
         if len(v) != len(set(v.keys())):
             raise ValueError("Duplicate IDs found in operations")
         return v
 
-    def append(self, openapi_spec: str) -> None:
+    def append(self, openapi_spec: str, source_name: str | None = None) -> None:
         """Append operations from an OpenAPI specification to the registry."""
-        self.operations.update(OpenApiLoader.load(url=openapi_spec))
+        loaded_ops = OpenApiLoader.load(url=openapi_spec)
+        self.operations.update(loaded_ops)
+        if source_name:
+            for op_id, op in loaded_ops.items():
+                self.operations[f"$sourceDescriptions.{source_name}.{op_id}"] = op
+
+    def get(self, operation_id: str) -> ApiOperation | None:
+        """Look up an operation by ID, supporting bare and qualified names."""
+        if operation_id in self.operations:
+            return self.operations[operation_id]
+        if operation_id.startswith("$sourceDescriptions."):
+            parts = operation_id.split(".")
+            if len(parts) >= 3:
+                bare_id = parts[-1]
+                if bare_id in self.operations:
+                    return self.operations[bare_id]
+        return None
+
+    def __getitem__(self, key: str) -> ApiOperation:
+        """Look up an operation by ID with indexing syntax."""
+        op = self.get(key)
+        if op is None:
+            raise KeyError(key)
+        return op
+
+    def __contains__(self, key: object) -> bool:
+        """Check if an operation is contained in the registry."""
+        if not isinstance(key, str):
+            return False
+        return self.get(key) is not None
 
 
 class OpenApiLoader:
@@ -197,9 +247,14 @@ class OpenApiLoader:
                     spec_dict = yaml.safe_load(file)
 
         # resolve all $ref
-        resolved_data = jsonref.loads(json.dumps(spec_dict))
+        resolved_data = jsonref.loads(json.dumps(spec_dict, default=str))
 
-        open_api_spec = OpenAPI(**resolved_data)
+        version = str(resolved_data.get("openapi", "3.0"))
+        open_api_spec: OpenAPI30 | OpenAPI31
+        if version.startswith("3.1"):
+            open_api_spec = OpenAPI31(**resolved_data)
+        else:
+            open_api_spec = OpenAPI30(**resolved_data)
 
         # just accumulate all parameters at the operation level
 

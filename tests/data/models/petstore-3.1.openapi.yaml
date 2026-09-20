@@ -1,0 +1,47 @@
+openapi: 3.1.0
+info:
+  title: PetStore 3.1 API
+  version: 1.0.0
+  description: A sample OpenAPI 3.1.0 specification for testing.
+paths:
+  /pets:
+    get:
+      summary: List all pets
+      operationId: listPets
+      responses:
+        "200":
+          description: A paged array of pets
+    post:
+      summary: Create a pet
+      operationId: createPet
+      responses:
+        "201":
+          description: Null response
+  /pets/{petId}:
+    get:
+      summary: Info for a specific pet
+      operationId: getPet
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          description: The id of the pet to retrieve
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Expected response to a valid request
+  /pets/{petId}/orders:
+    post:
+      summary: Place an order for a pet
+      operationId: orderPet
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          description: The id of the pet
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Order placed successfully

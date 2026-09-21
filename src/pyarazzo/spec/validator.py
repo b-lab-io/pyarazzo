@@ -65,7 +65,7 @@ class WorkflowValidationVisitor(ArazzoVisitor):
                 try:
                     # Resolve relative URLs based on spec file location
                     url = OpenApiLoader._resolve_url(source.url, self.spec_path)
-                    self.operation_registry.append(openapi_spec=url)
+                    self.operation_registry.append(openapi_spec=url, source_name=source.name)
                 except OSError as e:
                     self.initialization_errors.append(
                         f"Failed to load OpenAPI spec '{source.url}' from source '{source.name}': {e}",
@@ -170,12 +170,12 @@ class WorkflowValidationVisitor(ArazzoVisitor):
 
         # Validate operationId exists in registry
         if has_operation_id:
-            if step.operation_id not in self.operation_registry.operations:
+            operation = self.operation_registry.get(step.operation_id)
+            if operation is None:
                 self.errors.append(
                     f"Step '{step_id}' references non-existent operation '{step.operation_id}'",
                 )
             else:
-                operation = self.operation_registry.operations[step.operation_id]
                 self._validate_step_parameters(step, operation, step_id)
 
         # Validate workflowId exists

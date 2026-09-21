@@ -148,6 +148,7 @@ class SourceType(StrEnum):
 
     arazzo = "arazzo"
     openapi = "openapi"
+    asyncapi = "asyncapi"
 
 
 class SourceDescriptionObject(ArazzoElement):
@@ -646,6 +647,21 @@ class Step(ArazzoElement):
             alias="workflowId",
         ),
     ]
+    timeout: Annotated[
+        int | None,
+        Field(
+            None,
+            description="The duration in milliseconds to wait before timing out the step",
+        ),
+    ] = None
+    depends_on: Annotated[
+        list[str] | None,
+        Field(
+            None,
+            description="Specifies a list of step identifiers that must complete before the current step",
+            alias="dependsOn",
+        ),
+    ] = None
     parameters: Annotated[
         list[ParameterObject | ReusableObject],
         Field(
@@ -870,9 +886,17 @@ class ArazzoSpecification(ArazzoElement):
         Field(
             ...,
             description="The version number of the Arazzo Specification",
-            pattern=r"^1\.1\.\d+(-.+)?$",
+            pattern=r"^1\.[01]\.\d+(-.+)?$",
         ),
     ]
+    self_field: Annotated[
+        str | None,
+        Field(
+            None,
+            description="A URI-reference for the Arazzo Description",
+            alias="$self",
+        ),
+    ] = None
     info: Annotated[
         Info,
         Field(

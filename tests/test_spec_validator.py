@@ -223,4 +223,19 @@ def test_validator_validates_reusable_with_components() -> None:
     # since they are defined in components
     page_errors = [e for e in errors if "page" in e and "non-existent" in e]
     assert len(page_errors) == 0
-    assert len(page_errors) == 0
+
+
+def test_validator_arazzo_1_1_qualified_operations() -> None:
+    """Test that validator accepts Arazzo 1.1 specifications with qualified operation IDs and OpenAPI 3.1."""
+    spec_path = "./tests/data/models/v1/arazzo-1.1-sample.yaml"
+    spec_dict = yaml.safe_load(Path(spec_path).read_text(encoding="utf-8"))
+
+    spec = ArazzoSpecification(**spec_dict)
+    validator = WorkflowValidationVisitor(
+        specification=spec,
+        spec_path=spec_path,
+    )
+
+    is_valid, errors, _ = validator.validate()
+    assert is_valid is True
+    assert len(errors) == 0
